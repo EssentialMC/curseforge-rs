@@ -58,4 +58,22 @@ impl Client {
             .await?
             .data)
     }
+
+    pub async fn game_versions(&self, game_id: i32) -> surf::Result<Vec<GameVersions>> {
+        Ok(self
+            .inner
+            .get(&format!("games/{}/versions", game_id))
+            .recv_json::<GameVersionsResponse>()
+            .await?
+            .data)
+    }
+
+    pub async fn game_version_types(&self, game_id: i32) -> surf::Result<Vec<GameVersionType>> {
+        Ok(self
+            .inner
+            .get(&format!("games/{}/version-types", game_id))
+            .recv_json::<GameVersionTypesResponse>()
+            .await?
+            .data)
+    }
 }

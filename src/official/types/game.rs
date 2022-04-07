@@ -56,6 +56,43 @@ pub struct GameAssets {
     pub cover_url: Option<String>,
 }
 
+/// <https://docs.curseforge.com/#tocS_Get%20Versions%20Response>
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+pub struct GameVersionsResponse {
+    pub data: Vec<GameVersions>,
+}
+
+/// <https://docs.curseforge.com/#tocS_GameVersionsByType>
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+pub struct GameVersions {
+    #[serde(rename = "type")]
+    pub kind: i32,
+    pub versions: Vec<String>,
+}
+
+/// <https://docs.curseforge.com/#tocS_Get%20Version%20Types%20Response>
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+pub struct GameVersionTypesResponse {
+    pub data: Vec<GameVersionType>,
+}
+
+/// <https://docs.curseforge.com/#tocS_GameVersionType>
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+pub struct GameVersionType {
+    pub id: i32,
+    pub game_id: i32,
+    pub name: String,
+    pub slug: String,
+}
+
 fn nullable_str<'de, D: Deserializer<'de>>(deser: D) -> Result<Option<String>, D::Error> {
     let maybe: Option<String> = Option::deserialize(deser)?;
     Ok(maybe.filter(|string| !string.is_empty()))
