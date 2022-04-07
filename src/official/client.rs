@@ -50,11 +50,12 @@ impl Client {
             .await?)
     }
 
-    pub async fn game(&self, game_id: i32) -> surf::Result<GameResponse> {
+    pub async fn game(&self, game_id: i32) -> surf::Result<Game> {
         Ok(self
             .inner
-            .get(&format!("game/{}", game_id))
-            .recv_json()
-            .await?)
+            .get(&format!("games/{}", game_id))
+            .recv_json::<GameResponse>()
+            .await?
+            .data)
     }
 }
