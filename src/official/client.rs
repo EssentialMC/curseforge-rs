@@ -42,6 +42,7 @@ impl Client {
         })
     }
 
+    /// <https://docs.curseforge.com/#get-games>
     pub async fn games(&self, params: &GamesParams) -> surf::Result<GamesResponse> {
         Ok(self
             .inner
@@ -50,6 +51,7 @@ impl Client {
             .await?)
     }
 
+    /// <https://docs.curseforge.com/#get-game>
     pub async fn game(&self, game_id: i32) -> surf::Result<Game> {
         Ok(self
             .inner
@@ -59,6 +61,7 @@ impl Client {
             .data)
     }
 
+    /// <https://docs.curseforge.com/#get-versions>
     pub async fn game_versions(&self, game_id: i32) -> surf::Result<Vec<GameVersions>> {
         Ok(self
             .inner
@@ -68,6 +71,7 @@ impl Client {
             .data)
     }
 
+    /// <https://docs.curseforge.com/#get-version-types>
     pub async fn game_version_types(&self, game_id: i32) -> surf::Result<Vec<GameVersionType>> {
         Ok(self
             .inner
