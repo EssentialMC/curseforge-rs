@@ -1,10 +1,13 @@
+use super::types::*;
+
 /// This is the official CurseForge Core API base URL.
 /// You must pass it to constructors explicitly.
-pub const DEFAULT_API_BASE: &str = "https://api.curseforge.com/";
+pub const DEFAULT_API_BASE: &str = "https://api.curseforge.com/v1/";
 
 #[derive(Clone, Debug)]
 pub struct Client {
     inner: surf::Client,
+    #[allow(dead_code)]
     base: String,
 }
 
@@ -31,11 +34,27 @@ impl Client {
     where
         U: AsRef<str>,
     {
-        config = config.set_base_url(surf::Url::parse(base)?);
+        config = config.set_base_url(surf::Url::parse(base.as_ref())?);
 
         Ok(Self {
             inner: config.try_into()?,
             base: base.as_ref().to_owned(),
         })
+    }
+
+    pub async fn games(&self, params: &GamesParams) -> surf::Result<GamesResponse> {
+        Ok(self
+            .inner
+            .get(&format!("games?{}", params.to_query_string()))
+            .recv_json()
+            .await?)
+    }
+
+    pub async fn game(&self, game_id: i32) -> surf::Result<GameResponse> {
+        Ok(self
+            .inner
+            .get(&format!("game/{}", game_id))
+            .recv_json()
+            .await?)
     }
 }
