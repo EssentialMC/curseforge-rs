@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use query_string::QueryString;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize};
 
 use super::core::{CoreApiStatus, CoreStatus, Pagination};
 
@@ -48,7 +48,15 @@ pub struct Game {
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct GameAssets {
+    #[serde(deserialize_with = "nullable_str")]
     pub icon_url: Option<String>,
+    #[serde(deserialize_with = "nullable_str")]
     pub tile_url: Option<String>,
+    #[serde(deserialize_with = "nullable_str")]
     pub cover_url: Option<String>,
+}
+
+fn nullable_str<'de, D: Deserializer<'de>>(deser: D) -> Result<Option<String>, D::Error> {
+    let maybe: Option<String> = Option::deserialize(deser)?;
+    Ok(maybe.filter(|string| !string.is_empty()))
 }
