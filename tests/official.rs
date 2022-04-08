@@ -67,3 +67,21 @@ fn game_version_types() {
         assert!(games.is_ok());
     });
 }
+
+#[test]
+fn categories() {
+    smol::block_on(async {
+        let client = Client::new(API_BASE, None).unwrap();
+
+        let categories = client
+            .categories(&CategoriesParams::game(GAME_MINECRAFT))
+            .await;
+
+        match &categories {
+            Ok(categories) => println!("{:#?}", categories),
+            Err(error) => eprintln!("{:#?}", error),
+        }
+
+        assert!(categories.is_ok());
+    });
+}

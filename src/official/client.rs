@@ -80,4 +80,14 @@ impl Client {
             .await?
             .data)
     }
+
+    /// <https://docs.curseforge.com/#get-categories>
+    pub async fn categories(&self, params: &CategoriesParams) -> surf::Result<Vec<Category>> {
+        Ok(self
+            .inner
+            .get(&format!("categories?{}", params.to_query_string()))
+            .recv_json::<CategoriesResponse>()
+            .await?
+            .data)
+    }
 }

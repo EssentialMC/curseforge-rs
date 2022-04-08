@@ -1,5 +1,7 @@
+pub(crate) mod categories;
 pub(crate) mod core;
-pub(crate) mod game;
+pub(crate) mod games;
 
+pub use self::categories::*;
 pub use self::core::*;
-pub use self::game::*;
+pub use self::games::*;
