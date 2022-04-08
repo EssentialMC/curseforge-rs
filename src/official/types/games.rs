@@ -1,8 +1,9 @@
 use chrono::{DateTime, Utc};
 use query_string::QueryString;
-use serde::{Deserialize, Deserializer, Serialize};
+use serde::{Deserialize, Serialize};
 
 use super::core::{CoreApiStatus, CoreStatus, Pagination};
+use super::nullable_str;
 
 /// <https://docs.curseforge.com/#get-games>
 #[derive(Clone, Debug, Default, PartialEq, Serialize, QueryString)]
@@ -91,9 +92,4 @@ pub struct GameVersionType {
     pub game_id: i32,
     pub name: String,
     pub slug: String,
-}
-
-fn nullable_str<'de, D: Deserializer<'de>>(deser: D) -> Result<Option<String>, D::Error> {
-    let maybe: Option<String> = Option::deserialize(deser)?;
-    Ok(maybe.filter(|string| !string.is_empty()))
 }

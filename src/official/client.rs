@@ -90,4 +90,17 @@ impl Client {
             .await?
             .data)
     }
+
+    /// <https://docs.curseforge.com/#search-mods>
+    pub async fn search_mods(&self, params: &SearchModsParams) -> surf::Result<SearchModsResponse> {
+        let response = self
+            .inner
+            .get(&format!("mods/search?{}", params.to_query_string()))
+            .recv_bytes()
+            .await?;
+
+        std::fs::write("./search.json", &response).unwrap();
+
+        Ok(serde_json::from_slice(response.as_slice())?)
+    }
 }

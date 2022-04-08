@@ -85,3 +85,24 @@ fn categories() {
         assert!(categories.is_ok());
     });
 }
+
+#[test]
+fn search_mods() {
+    smol::block_on(async {
+        let client = Client::new(API_BASE, None).unwrap();
+
+        let params = SearchModsParams::game(GAME_MINECRAFT);
+
+        // params.page_size = Some(1);
+
+        let mods = client.search_mods(&params).await;
+
+        match &mods {
+            Ok(categories) => println!("{:#?}", categories),
+            Err(error) => eprintln!("{:#?}", error),
+        }
+
+        assert!(mods.is_ok());
+    });
+}
+
