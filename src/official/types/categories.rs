@@ -2,6 +2,8 @@ use chrono::{DateTime, Utc};
 use query_string::QueryString;
 use serde::{Deserialize, Serialize};
 
+use super::nullable_datetime;
+
 /// <https://docs.curseforge.com/#get-categories>
 #[derive(Clone, Debug, PartialEq, Serialize, QueryString)]
 #[serde(rename_all = "camelCase")]
@@ -38,7 +40,8 @@ pub struct Category {
     pub slug: Option<String>,
     pub url: Option<String>,
     pub icon_url: String,
-    pub date_modified: DateTime<Utc>,
+    #[serde(deserialize_with = "nullable_datetime")]
+    pub date_modified: Option<DateTime<Utc>>,
     pub is_class: Option<bool>,
     #[serde(default)]
     pub class_id: Option<i32>,

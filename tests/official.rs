@@ -105,4 +105,3 @@ fn search_mods() {
         assert!(mods.is_ok());
     });
 }
-
