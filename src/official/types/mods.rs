@@ -108,7 +108,7 @@ pub struct Mod {
     pub categories: Vec<Category>,
     pub class_id: Option<i32>,
     pub authors: Vec<ModAuthor>,
-    pub logo: ModAsset,
+    pub logo: Option<ModAsset>,
     pub screenshots: Vec<ModAsset>,
     pub main_file_id: i32,
     pub latest_files: Vec<File>,
