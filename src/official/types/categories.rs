@@ -35,7 +35,7 @@ pub struct Category {
     pub id: i32,
     pub game_id: i32,
     pub name: String,
-    pub slug: String,
+    pub slug: Option<String>,
     pub url: Option<String>,
     pub icon_url: String,
     pub date_modified: DateTime<Utc>,
