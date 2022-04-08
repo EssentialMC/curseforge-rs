@@ -105,3 +105,42 @@ fn search_mods() {
         assert!(mods.is_ok());
     });
 }
+
+#[test]
+fn search_mods_iter() {
+    use std::io::Write;
+
+    use smol::pin;
+    use smol::stream::StreamExt;
+
+    smol::block_on(async {
+        let client = Client::new(API_BASE, None).unwrap();
+
+        let params = SearchModsParams::game(GAME_MINECRAFT);
+
+        let mods_iter = client.search_mods_iter(params).await;
+        pin!(mods_iter);
+
+        let mut count = 0;
+
+        while let Some(item) = mods_iter.next().await {
+            match &item {
+                Ok(item) => {
+                    count += 1;
+                    let mut file = std::fs::File::create(&format!(
+                        "./target/tests/search_mods_iter/{}.json",
+                        item.slug
+                    ))
+                    .unwrap();
+                    file.write_all(serde_json::to_vec(&item).unwrap().as_slice())
+                        .unwrap();
+                }
+                Err(error) => {
+                    eprintln!("Error encountered after {} results!\n{:#?}", count, error)
+                }
+            }
+
+            assert!(item.is_ok());
+        }
+    });
+}

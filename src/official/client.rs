@@ -1,3 +1,8 @@
+use std::collections::VecDeque;
+
+use async_stream::try_stream;
+use futures_core::Stream;
+
 use super::types::*;
 
 /// This is the official CurseForge Core API base URL.
@@ -102,5 +107,34 @@ impl Client {
         std::fs::write("./search.json", &response).unwrap();
 
         Ok(serde_json::from_slice(response.as_slice())?)
+    }
+
+    pub async fn search_mods_iter(
+        &self,
+        mut params: SearchModsParams,
+    ) -> impl Stream<Item = surf::Result<Mod>> + '_ {
+        let mut items = VecDeque::new();
+        params.index = params.index.or(Some(0));
+
+        try_stream! {
+            let mut response = self.search_mods(&params).await?;
+
+            loop {
+                if items.is_empty() {
+                    if params.index.unwrap() as i64 >= response.pagination.total_count {
+                        break;
+                    }
+
+                    response = self.search_mods(&params).await?;
+                    debug_assert_eq!(response.pagination.index, params.index.unwrap());
+                    params.index = Some(params.index.unwrap() + response.pagination.result_count);
+                    debug_assert_eq!(response.pagination.result_count as usize, response.data.len());
+
+                    items.extend(response.data.into_iter());
+                }
+
+                yield items.pop_front().unwrap();
+            }
+        }
     }
 }
