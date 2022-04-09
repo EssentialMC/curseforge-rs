@@ -6,6 +6,7 @@ use std::task::{Context, Poll};
 
 use async_stream::try_stream;
 use futures_lite::stream::{Stream, StreamExt};
+use serde::Deserialize;
 
 use super::types::*;
 
@@ -192,6 +193,28 @@ impl Client {
             },
             API_PAGINATION_RESULTS_LIMIT,
         )
+    }
+
+    /// <https://docs.curseforge.com/#get-mod>
+    ///
+    /// Renamed from `mod` to `addon` because that is a keyword.
+    pub async fn addon(&self, mod_id: i32) -> surf::Result<Mod> {
+        let response = self
+            .inner
+            .get(&format!("mods/{}", mod_id))
+            .recv_bytes()
+            .await?;
+
+        /// <https://docs.curseforge.com/#tocS_Get%20Game%20Response>
+        #[derive(Deserialize)]
+        #[serde(deny_unknown_fields)]
+        struct ModResponse {
+            data: Mod,
+        }
+
+        let response: ModResponse = serde_json::from_slice(response.as_slice())?;
+
+        Ok(response.data)
     }
 }
 
