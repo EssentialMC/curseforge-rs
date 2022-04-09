@@ -1,13 +1,16 @@
 use std::collections::VecDeque;
+use std::pin::Pin;
+use std::task::{Context, Poll};
 
 use async_stream::try_stream;
-use futures_core::Stream;
+use futures_lite::stream::{Stream, StreamExt};
 
 use super::types::*;
 
 /// This is the official CurseForge Core API base URL.
 /// You must pass it to constructors explicitly.
 pub const DEFAULT_API_BASE: &str = "https://api.curseforge.com/v1/";
+pub const API_SEARCH_RESULTS_LIMIT: usize = 10_000;
 
 #[derive(Clone, Debug)]
 pub struct Client {
@@ -109,32 +112,82 @@ impl Client {
         Ok(serde_json::from_slice(response.as_slice())?)
     }
 
-    pub async fn search_mods_iter(
-        &self,
-        mut params: SearchModsParams,
-    ) -> impl Stream<Item = surf::Result<Mod>> + '_ {
-        let mut items = VecDeque::new();
-        params.index = params.index.or(Some(0));
+    /// <https://docs.curseforge.com/#search-mods>
+    pub async fn search_mods_iter(&self, mut params: SearchModsParams) -> PaginatedStream<'_, Mod> {
+        PaginatedStream::new(
+            |/* this closure needs to take a mutable reference to either the stream wrapper or the field for the paginator */| {
+                let mut items = VecDeque::new();
+                params.index = params.index.or(Some(0));
 
-        try_stream! {
-            let mut response = self.search_mods(&params).await?;
+                Box::pin(try_stream! {
+                    let mut response = self.search_mods(&params).await?;
 
-            loop {
-                if items.is_empty() {
-                    if params.index.unwrap() as i64 >= response.pagination.total_count {
-                        break;
+                    loop {
+                        if items.is_empty() {
+                            if params.index.unwrap() as usize
+                                >= usize::min(
+                                    API_SEARCH_RESULTS_LIMIT,
+                                    response.pagination.total_count as usize,
+                                )
+                            {
+                                break;
+                            }
+
+                            response = self.search_mods(&params).await?;
+                            // Here the response.paginator field needs to be sent back to the wrapper
+                            debug_assert_eq!(response.pagination.index, params.index.unwrap());
+                            params.index = Some(params.index.unwrap() + response.pagination.result_count);
+                            // We can expect move issues here but that is manageable
+                            debug_assert_eq!(response.pagination.result_count as usize, response.data.len());
+
+                            items.extend(response.data.into_iter());
+                        }
+
+                        yield items.pop_front().unwrap();
                     }
+                })
+            },
+            API_SEARCH_RESULTS_LIMIT,
+        )
+    }
+}
 
-                    response = self.search_mods(&params).await?;
-                    debug_assert_eq!(response.pagination.index, params.index.unwrap());
-                    params.index = Some(params.index.unwrap() + response.pagination.result_count);
-                    debug_assert_eq!(response.pagination.result_count as usize, response.data.len());
+pub struct PaginatedStream<'ps, T> {
+    inner: Pin<Box<dyn Stream<Item = surf::Result<T>> + 'ps>>,
+    pagination: Option<Pagination>,
+    limit: usize,
+}
 
-                    items.extend(response.data.into_iter());
-                }
+impl<'ps, T> PaginatedStream<'ps, T> {
+    pub fn new<F>(stream: F, limit: usize) -> Self
+    where
+        F: FnOnce() -> Pin<Box<dyn Stream<Item = surf::Result<T>> + 'ps>>,
+    {
+        Self {
+            inner: stream(),
+            pagination: None,
+            limit,
+        }
+    }
 
-                yield items.pop_front().unwrap();
+    pub fn pagination(&self) -> &Option<Pagination> {
+        &self.pagination
+    }
+}
+
+impl<T> Stream for PaginatedStream<'_, T> {
+    type Item = surf::Result<T>;
+
+    fn poll_next(mut self: Pin<&mut Self>, ctx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        self.inner.poll_next(ctx)
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match self.pagination() {
+            Some(Pagination { total_count, .. }) => {
+                (0, Some(usize::min(self.limit, *total_count as usize)))
             }
+            None => (0, None),
         }
     }
 }

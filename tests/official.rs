@@ -113,11 +113,12 @@ fn search_mods_iter() {
     use smol::pin;
     use smol::stream::StreamExt;
 
+    let client = Client::new(API_BASE, None).unwrap();
+    let params = SearchModsParams::game(GAME_MINECRAFT);
+
+    // params.index = Some(5000);
+
     smol::block_on(async {
-        let client = Client::new(API_BASE, None).unwrap();
-
-        let params = SearchModsParams::game(GAME_MINECRAFT);
-
         let mods_iter = client.search_mods_iter(params).await;
         pin!(mods_iter);
 
