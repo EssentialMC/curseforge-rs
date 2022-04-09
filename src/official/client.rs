@@ -6,7 +6,6 @@ use std::task::{Context, Poll};
 
 use async_stream::try_stream;
 use futures_lite::stream::{Stream, StreamExt};
-use serde::Deserialize;
 
 use super::types::*;
 
@@ -55,51 +54,67 @@ impl Client {
 
     /// <https://docs.curseforge.com/#get-games>
     pub async fn games(&self, params: &GamesParams) -> surf::Result<GamesResponse> {
-        Ok(self
+        let response = self
             .inner
             .get(&format!("games?{}", params.to_query_string()))
-            .recv_json()
-            .await?)
+            .recv_bytes()
+            .await?;
+
+        let response = serde_json::from_slice(response.as_slice())?;
+
+        Ok(response)
     }
 
     /// <https://docs.curseforge.com/#get-game>
     pub async fn game(&self, game_id: i32) -> surf::Result<Game> {
-        Ok(self
+        let response = self
             .inner
             .get(&format!("games/{}", game_id))
-            .recv_json::<GameResponse>()
-            .await?
-            .data)
+            .recv_bytes()
+            .await?;
+
+        let response: IntermResponse<_> = serde_json::from_slice(response.as_slice())?;
+
+        Ok(response.data)
     }
 
     /// <https://docs.curseforge.com/#get-versions>
     pub async fn game_versions(&self, game_id: i32) -> surf::Result<Vec<GameVersions>> {
-        Ok(self
+        let response = self
             .inner
             .get(&format!("games/{}/versions", game_id))
-            .recv_json::<GameVersionsResponse>()
-            .await?
-            .data)
+            .recv_bytes()
+            .await?;
+
+        let response: IntermResponse<_> = serde_json::from_slice(response.as_slice())?;
+
+        Ok(response.data)
     }
 
     /// <https://docs.curseforge.com/#get-version-types>
     pub async fn game_version_types(&self, game_id: i32) -> surf::Result<Vec<GameVersionType>> {
-        Ok(self
+        let response = self
             .inner
             .get(&format!("games/{}/version-types", game_id))
-            .recv_json::<GameVersionTypesResponse>()
-            .await?
-            .data)
+            .recv_bytes()
+            .await?;
+
+        let response: IntermResponse<_> = serde_json::from_slice(response.as_slice())?;
+
+        Ok(response.data)
     }
 
     /// <https://docs.curseforge.com/#get-categories>
     pub async fn categories(&self, params: &CategoriesParams) -> surf::Result<Vec<Category>> {
-        Ok(self
+        let response = self
             .inner
             .get(&format!("categories?{}", params.to_query_string()))
-            .recv_json::<CategoriesResponse>()
-            .await?
-            .data)
+            .recv_bytes()
+            .await?;
+
+        let response: IntermResponse<_> = serde_json::from_slice(response.as_slice())?;
+
+        Ok(response.data)
     }
 
     /// <https://docs.curseforge.com/#search-mods>
@@ -110,7 +125,9 @@ impl Client {
             .recv_bytes()
             .await?;
 
-        Ok(serde_json::from_slice(response.as_slice())?)
+        let response = serde_json::from_slice(response.as_slice())?;
+
+        Ok(response)
     }
 
     /// <https://docs.curseforge.com/#search-mods>
@@ -197,7 +214,7 @@ impl Client {
 
     /// <https://docs.curseforge.com/#get-mod>
     ///
-    /// Renamed from `mod` to `addon` because that is a keyword.
+    /// Renamed from `mod` to `addon` because the former is a keyword.
     pub async fn addon(&self, mod_id: i32) -> surf::Result<Mod> {
         let response = self
             .inner
@@ -205,14 +222,7 @@ impl Client {
             .recv_bytes()
             .await?;
 
-        /// <https://docs.curseforge.com/#tocS_Get%20Game%20Response>
-        #[derive(Deserialize)]
-        #[serde(deny_unknown_fields)]
-        struct ModResponse {
-            data: Mod,
-        }
-
-        let response: ModResponse = serde_json::from_slice(response.as_slice())?;
+        let response: IntermResponse<_> = serde_json::from_slice(response.as_slice())?;
 
         Ok(response.data)
     }

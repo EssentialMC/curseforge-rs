@@ -3,7 +3,7 @@ use query_string::QueryString;
 use serde::{Deserialize, Serialize};
 
 use super::core::{CoreApiStatus, CoreStatus, Pagination};
-use super::nullable_str;
+use super::nullable_string;
 
 /// <https://docs.curseforge.com/#get-games>
 #[derive(Clone, Debug, Default, PartialEq, Serialize, QueryString)]
@@ -57,14 +57,6 @@ pub struct GameAssets {
     pub cover_url: Option<String>,
 }
 
-/// <https://docs.curseforge.com/#tocS_Get%20Versions%20Response>
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
-pub struct GameVersionsResponse {
-    pub data: Vec<GameVersions>,
-}
-
 /// <https://docs.curseforge.com/#tocS_GameVersionsByType>
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -73,14 +65,6 @@ pub struct GameVersions {
     #[serde(rename = "type")]
     pub kind: i32,
     pub versions: Vec<String>,
-}
-
-/// <https://docs.curseforge.com/#tocS_Get%20Version%20Types%20Response>
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
-pub struct GameVersionTypesResponse {
-    pub data: Vec<GameVersionType>,
 }
 
 /// <https://docs.curseforge.com/#tocS_GameVersionType>

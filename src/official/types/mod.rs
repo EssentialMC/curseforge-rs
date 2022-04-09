@@ -13,7 +13,20 @@ pub use self::mods::*;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Deserializer};
 
-pub(crate) fn nullable_str<'de, D: Deserializer<'de>>(
+/// Wraps API responses which have the single field `data`.
+/// This type could be publicised if it is needed for some reason.
+///
+/// <https://docs.curseforge.com/#tocS_Get%20Versions%20Response>
+/// <https://docs.curseforge.com/#tocS_Get%20Version%20Types%20Response>
+/// <https://docs.curseforge.com/#tocS_Get%20Categories%20Response>
+/// <https://docs.curseforge.com/#tocS_Get%20Game%20Response>
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct IntermResponse<T> {
+    pub data: T,
+}
+
+pub(crate) fn nullable_string<'de, D: Deserializer<'de>>(
     deser: D,
 ) -> Result<Option<String>, D::Error> {
     let maybe: Option<String> = Option::deserialize(deser)?;

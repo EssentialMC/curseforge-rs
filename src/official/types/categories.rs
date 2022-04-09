@@ -21,14 +21,6 @@ impl CategoriesParams {
     }
 }
 
-/// <https://docs.curseforge.com/#tocS_Get%20Categories%20Response>
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
-pub struct CategoriesResponse {
-    pub data: Vec<Category>,
-}
-
 /// <https://docs.curseforge.com/#tocS_Category>
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

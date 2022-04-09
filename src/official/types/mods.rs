@@ -8,7 +8,7 @@ use strum::{Display, EnumString};
 use super::categories::Category;
 use super::core::Pagination;
 use super::file::{File, FileIndex};
-use super::nullable_str;
+use super::nullable_string;
 
 /// <https://docs.curseforge.com/#search-mods>
 #[derive(Clone, Debug, PartialEq, Serialize, QueryString)]
