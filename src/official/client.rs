@@ -1,5 +1,7 @@
+use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::pin::Pin;
+use std::rc::Rc;
 use std::task::{Context, Poll};
 
 use async_stream::try_stream;
@@ -10,7 +12,7 @@ use super::types::*;
 /// This is the official CurseForge Core API base URL.
 /// You must pass it to constructors explicitly.
 pub const DEFAULT_API_BASE: &str = "https://api.curseforge.com/v1/";
-pub const API_SEARCH_RESULTS_LIMIT: usize = 10_000;
+pub const API_PAGINATION_RESULTS_LIMIT: usize = 10_000;
 
 #[derive(Clone, Debug)]
 pub struct Client {
@@ -115,30 +117,39 @@ impl Client {
     /// <https://docs.curseforge.com/#search-mods>
     pub async fn search_mods_iter(&self, mut params: SearchModsParams) -> PaginatedStream<'_, Mod> {
         PaginatedStream::new(
-            |/* this closure needs to take a mutable reference to either the stream wrapper or the field for the paginator */| {
+            |pagination, limit| {
                 let mut items = VecDeque::new();
                 params.index = params.index.or(Some(0));
 
                 Box::pin(try_stream! {
                     let mut response = self.search_mods(&params).await?;
 
+                    {
+                        let mut pagination = pagination.as_ref().borrow_mut();
+                        *pagination = Some(response.pagination);
+                    }
+
                     loop {
                         if items.is_empty() {
-                            if params.index.unwrap() as usize
-                                >= usize::min(
-                                    API_SEARCH_RESULTS_LIMIT,
-                                    response.pagination.total_count as usize,
-                                )
-                            {
+                            let mut pagination = pagination.as_ref().borrow_mut();
+
+                            let limit = usize::min(
+                                limit,
+                                pagination.as_ref().unwrap().total_count as usize
+                            );
+
+                            if params.index.unwrap() as usize >= limit {
                                 break;
                             }
 
                             response = self.search_mods(&params).await?;
-                            // Here the response.paginator field needs to be sent back to the wrapper
-                            debug_assert_eq!(response.pagination.index, params.index.unwrap());
-                            params.index = Some(params.index.unwrap() + response.pagination.result_count);
-                            // We can expect move issues here but that is manageable
-                            debug_assert_eq!(response.pagination.result_count as usize, response.data.len());
+                            *pagination = Some(response.pagination);
+                            let pagination = (*pagination).as_ref().unwrap();
+
+                            debug_assert_eq!(pagination.index, params.index.unwrap());
+                            debug_assert_eq!(pagination.result_count as usize, response.data.len());
+
+                            params.index = Some(params.index.unwrap() + pagination.result_count);
 
                             items.extend(response.data.into_iter());
                         }
@@ -147,31 +158,40 @@ impl Client {
                     }
                 })
             },
-            API_SEARCH_RESULTS_LIMIT,
+            API_PAGINATION_RESULTS_LIMIT,
         )
     }
 }
 
 pub struct PaginatedStream<'ps, T> {
     inner: Pin<Box<dyn Stream<Item = surf::Result<T>> + 'ps>>,
-    pagination: Option<Pagination>,
+    pagination: Rc<RefCell<Option<Pagination>>>,
     limit: usize,
 }
 
 impl<'ps, T> PaginatedStream<'ps, T> {
     pub fn new<F>(stream: F, limit: usize) -> Self
     where
-        F: FnOnce() -> Pin<Box<dyn Stream<Item = surf::Result<T>> + 'ps>>,
+        F: FnOnce(
+            Rc<RefCell<Option<Pagination>>>,
+            usize,
+        ) -> Pin<Box<dyn Stream<Item = surf::Result<T>> + 'ps>>,
     {
+        let pagination = Rc::new(RefCell::new(None));
+
         Self {
-            inner: stream(),
-            pagination: None,
+            inner: stream(Rc::clone(&pagination), limit),
+            pagination,
             limit,
         }
     }
 
-    pub fn pagination(&self) -> &Option<Pagination> {
-        &self.pagination
+    pub fn limit(&self) -> usize {
+        self.limit
+    }
+
+    pub fn pagination(&self) -> Option<Pagination> {
+        (*self.pagination.as_ref().borrow()).clone()
     }
 }
 
@@ -183,9 +203,9 @@ impl<T> Stream for PaginatedStream<'_, T> {
     }
 
     fn size_hint(&self) -> (usize, Option<usize>) {
-        match self.pagination() {
+        match *self.pagination.as_ref().borrow() {
             Some(Pagination { total_count, .. }) => {
-                (0, Some(usize::min(self.limit, *total_count as usize)))
+                (0, Some(usize::min(self.limit, total_count as usize)))
             }
             None => (0, None),
         }
