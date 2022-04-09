@@ -115,15 +115,25 @@ impl Client {
     }
 
     /// <https://docs.curseforge.com/#search-mods>
+    ///
+    /// This adheres to the limit of results defined by the
+    /// [documentation](https://docs.curseforge.com/#pagination-limits),
+    /// hardcoded by the constant [`API_PAGINATION_RESULTS_LIMIT`].
     pub async fn search_mods_iter(&self, mut params: SearchModsParams) -> PaginatedStream<'_, Mod> {
         PaginatedStream::new(
             |pagination, limit| {
+                // Construct a new iterator that can have items popped from the front.
                 let mut items = VecDeque::new();
+                // If the callee didn't specify a starting index, set it to `0` so that
+                // this value can be conveniently unwrapped.
                 params.index = params.index.or(Some(0));
 
                 Box::pin(try_stream! {
+                    // Initialize `response` with the first result.
                     let mut response = self.search_mods(&params).await?;
 
+                    // Assign the response's `Pagination` value
+                    // into the `RefCell` provided in the arguments.
                     {
                         let mut pagination = pagination.as_ref().borrow_mut();
                         *pagination = Some(response.pagination);
@@ -131,29 +141,53 @@ impl Client {
 
                     loop {
                         if items.is_empty() {
+                            // Get a mutable reference to the current `Pagination`.
+                            // A `RefMut` is taken, but will not be mutated unless
+                            // we are still under the limit below.
                             let mut pagination = pagination.as_ref().borrow_mut();
-
+                            // The limit that we will use to break the iterator is
+                            // going to be either the maximum results the API will
+                            // provide before terminating the stream,
+                            // or the current `total_count` provided by the last request.
                             let limit = usize::min(
                                 limit,
                                 pagination.as_ref().unwrap().total_count as usize
                             );
 
+                            // Check if we are at or past the limit above and break,
+                            // resulting in a `Poll::Ready(None)`.
                             if params.index.unwrap() as usize >= limit {
                                 break;
                             }
 
+                            // This has continued, meaning we haven't yet reached the limit.
+                            // Get the next page of search results, the index for which
+                            // has been set on the previous iteration (or before entering the loop).
                             response = self.search_mods(&params).await?;
+                            // Assign the response's new `Pagination` to the `RefMut`
+                            // from the arguments, this will be available by
+                            // the `pagination()` method on `PaginatedStream`.
                             *pagination = Some(response.pagination);
+                            // Get the current `Option<Pagination>` as a reference to the inner
+                            // value and unwrap the `Option`.
                             let pagination = (*pagination).as_ref().unwrap();
 
+                            // Check that the current `pagination`'s index matches the
+                            // one from the `SearchModsParams` to ensure it is being updated correctly.
                             debug_assert_eq!(pagination.index, params.index.unwrap());
+                            // Check that the API is returning the number of results that it
+                            // claims to be providing.
                             debug_assert_eq!(pagination.result_count as usize, response.data.len());
 
+                            // Assign the proper offset for the next page request.
                             params.index = Some(params.index.unwrap() + pagination.result_count);
-
+                            // Take the `Vec<Mod>` items from the response and extend the
+                            // `VecDeque` that is used to yield the front-most items.
                             items.extend(response.data.into_iter());
                         }
 
+                        // Take the front-most item from the state's `VecDeque` and unwrap it,
+                        // because we already checked to ensure that it isn't empty.
                         yield items.pop_front().unwrap();
                     }
                 })
@@ -163,9 +197,23 @@ impl Client {
     }
 }
 
+/// This is a convenience wrapper provided to give the callee access to the
+/// API's limit of maximum results, as well as the [`Pagination`] resulting from
+/// every new request. The heavy lifting here is done by the closure, which must
+/// return the [`Stream`] that this is intended to wrap. For an example of such
+/// an implementation, see the source for the [`Client::search_mods_iter`]
+/// method.
 pub struct PaginatedStream<'ps, T> {
+    // This needs to be pinned because `Stream` should be immovable,
+    // and stored on the heap because dynamic-dispatch values are dynamically sized.
     inner: Pin<Box<dyn Stream<Item = surf::Result<T>> + 'ps>>,
+    // Store the last `Pagination` from the API, as a reference-counted
+    // reference cell, so that the closure that implements the `Stream`
+    // can update its value.
     pagination: Rc<RefCell<Option<Pagination>>>,
+    // This will be assigned by the constructor, causing the stream to yield
+    // `Poll::Ready(None)` when we have reached the API's result limit.
+    // If there is no known limit, `usize::MAX` can be used.
     limit: usize,
 }
 
@@ -177,11 +225,19 @@ impl<'ps, T> PaginatedStream<'ps, T> {
             usize,
         ) -> Pin<Box<dyn Stream<Item = surf::Result<T>> + 'ps>>,
     {
+        // Create a new `Option<Pagination>` with interior mutability to pass to the
+        // `Stream` closure. This will be `None` until the first request
+        // succeeds.
         let pagination = Rc::new(RefCell::new(None));
 
         Self {
+            // Clone the reference-counted pointer to the `Pagination`,
+            // and provide the API's `limit` to the closure so it knows when to stop.
             inner: stream(Rc::clone(&pagination), limit),
+            // Store the original `Rc` to the state of the paginator.
             pagination,
+            // Store the limit for maximum results. A callee can get the value of this
+            // with the `limit()` method.
             limit,
         }
     }
@@ -191,6 +247,8 @@ impl<'ps, T> PaginatedStream<'ps, T> {
     }
 
     pub fn pagination(&self) -> Option<Pagination> {
+        // Get the `RefMut`, and then a `Ref`, and clone the `Pagination`
+        // so that we can pass ownership of a new value.
         (*self.pagination.as_ref().borrow()).clone()
     }
 }
@@ -202,7 +260,14 @@ impl<T> Stream for PaginatedStream<'_, T> {
         self.inner.poll_next(ctx)
     }
 
+    /// Return the lower and upper bounds for the stream, the upper bound will
+    /// be `None` if no successful requests have been made yet. This does not
+    /// provide the total number of results returned from the API, but rather is
+    /// capped at the limit provided to the constructor for this paginator.
+    /// The lower bound is always going to be zero.
     fn size_hint(&self) -> (usize, Option<usize>) {
+        // Get the `RefMut`, and then a `Ref`, and clone the `Pagination`
+        // so that we can pass ownership of a new value.
         match *self.pagination.as_ref().borrow() {
             Some(Pagination { total_count, .. }) => {
                 (0, Some(usize::min(self.limit, total_count as usize)))
