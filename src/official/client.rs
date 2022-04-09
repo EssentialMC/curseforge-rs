@@ -109,8 +109,6 @@ impl Client {
             .recv_bytes()
             .await?;
 
-        std::fs::write("./search.json", &response).unwrap();
-
         Ok(serde_json::from_slice(response.as_slice())?)
     }
 
@@ -266,8 +264,7 @@ impl<T> Stream for PaginatedStream<'_, T> {
     /// capped at the limit provided to the constructor for this paginator.
     /// The lower bound is always going to be zero.
     fn size_hint(&self) -> (usize, Option<usize>) {
-        // Get the `RefMut`, and then a `Ref`, and clone the `Pagination`
-        // so that we can pass ownership of a new value.
+        // Get the `RefMut`, and then a `Ref`, dereference to get a borrow.
         match *self.pagination.as_ref().borrow() {
             Some(Pagination { total_count, .. }) => {
                 (0, Some(usize::min(self.limit, total_count as usize)))
