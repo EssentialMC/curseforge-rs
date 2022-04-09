@@ -49,11 +49,11 @@ pub struct Game {
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct GameAssets {
-    #[serde(deserialize_with = "nullable_str")]
+    #[serde(deserialize_with = "nullable_string")]
     pub icon_url: Option<String>,
-    #[serde(deserialize_with = "nullable_str")]
+    #[serde(deserialize_with = "nullable_string")]
     pub tile_url: Option<String>,
-    #[serde(deserialize_with = "nullable_str")]
+    #[serde(deserialize_with = "nullable_string")]
     pub cover_url: Option<String>,
 }
 

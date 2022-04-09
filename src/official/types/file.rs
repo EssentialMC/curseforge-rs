@@ -104,9 +104,9 @@ pub enum HashAlgorithm {
 #[serde(deny_unknown_fields)]
 pub struct SortableGameVersion {
     pub game_version_name: String,
-    #[serde(deserialize_with = "nullable_str")]
+    #[serde(deserialize_with = "nullable_string")]
     pub game_version_padded: Option<String>,
-    #[serde(deserialize_with = "nullable_str")]
+    #[serde(deserialize_with = "nullable_string")]
     pub game_version: Option<String>,
     pub game_version_release_date: DateTime<Utc>,
     pub game_version_type_id: Option<i32>,

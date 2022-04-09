@@ -127,11 +127,11 @@ pub struct Mod {
 #[serde(deny_unknown_fields)]
 pub struct ModLinks {
     pub website_url: String,
-    #[serde(deserialize_with = "nullable_str")]
+    #[serde(deserialize_with = "nullable_string")]
     pub wiki_url: Option<String>,
-    #[serde(deserialize_with = "nullable_str")]
+    #[serde(deserialize_with = "nullable_string")]
     pub issues_url: Option<String>,
-    #[serde(deserialize_with = "nullable_str")]
+    #[serde(deserialize_with = "nullable_string")]
     pub source_url: Option<String>,
 }
 
@@ -169,7 +169,7 @@ pub struct ModAsset {
     pub id: i32,
     pub mod_id: i32,
     pub title: String,
-    #[serde(deserialize_with = "nullable_str")]
+    #[serde(deserialize_with = "nullable_string")]
     pub description: Option<String>,
     pub thumbnail_url: String,
     pub url: String,
