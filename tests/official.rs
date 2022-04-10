@@ -87,15 +87,15 @@ fn categories() {
 }
 
 #[test]
-fn search_mods() {
+fn search_projects() {
     smol::block_on(async {
         let client = Client::new(API_BASE, None).unwrap();
 
-        let params = SearchModsParams::game(GAME_MINECRAFT);
+        let params = SearchParams::game(GAME_MINECRAFT);
 
         // params.page_size = Some(1);
 
-        let mods = client.search_mods(&params).await;
+        let mods = client.search(&params).await;
 
         match &mods {
             Ok(categories) => println!("{:#?}", categories),
@@ -107,19 +107,19 @@ fn search_mods() {
 }
 
 #[test]
-fn search_mods_iter() {
+fn search_projects_iter() {
     use std::io::Write;
 
     use smol::pin;
     use smol::stream::StreamExt;
 
     let client = Client::new(API_BASE, None).unwrap();
-    let params = SearchModsParams::game(GAME_MINECRAFT);
+    let params = SearchParams::game(GAME_MINECRAFT);
 
     // params.index = Some(5000);
 
     smol::block_on(async {
-        let mods_iter = client.search_mods_iter(params).await;
+        let mods_iter = client.search_iter(params).await;
         pin!(mods_iter);
 
         let mut count = 0;
@@ -147,13 +147,13 @@ fn search_mods_iter() {
 }
 
 #[test]
-fn addon() {
+fn project() {
     const MOUSE_TWEAKS_MOD_ID: i32 = 60089;
 
     smol::block_on(async {
         let client = Client::new(API_BASE, None).unwrap();
 
-        let addon = client.addon(MOUSE_TWEAKS_MOD_ID).await;
+        let addon = client.project(MOUSE_TWEAKS_MOD_ID).await;
 
         match &addon {
             Ok(categories) => println!("{:#?}", categories),
@@ -165,15 +165,15 @@ fn addon() {
 }
 
 #[test]
-fn addons() {
+fn projects() {
     use smol::pin;
     use smol::stream::StreamExt;
 
     let client = Client::new(API_BASE, None).unwrap();
-    let params = SearchModsParams::game(GAME_MINECRAFT);
+    let params = SearchParams::game(GAME_MINECRAFT);
 
     smol::block_on(async {
-        let mods_iter = client.search_mods_iter(params).await;
+        let mods_iter = client.search_iter(params).await;
         pin!(mods_iter);
 
         let mut count = 0;
@@ -197,9 +197,9 @@ fn addons() {
             }
         }
 
-        let mods = client.addons(mod_ids).await.unwrap();
+        let projects = client.projects(mod_ids).await.unwrap();
         let file = std::fs::File::create("./target/tests/addons.json").unwrap();
 
-        serde_json::to_writer_pretty(file, &mods).unwrap();
+        serde_json::to_writer_pretty(file, &projects).unwrap();
     });
 }

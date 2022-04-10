@@ -2,8 +2,8 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
-use super::mods::ModLoaderType;
 use super::nullable_string;
+use super::projects::ModLoaderType;
 
 /// <https://docs.curseforge.com/#tocS_File>
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

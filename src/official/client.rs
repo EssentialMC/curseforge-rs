@@ -48,19 +48,6 @@ impl Client {
         })
     }
 
-    /// <https://docs.curseforge.com/#get-games>
-    pub async fn games(&self, params: &GamesParams) -> surf::Result<GamesResponse> {
-        let response = self
-            .inner
-            .get(&format!("games?{}", params.to_query_string()))
-            .recv_bytes()
-            .await?;
-
-        let response = serde_json::from_slice(response.as_slice())?;
-
-        Ok(response)
-    }
-
     /// <https://docs.curseforge.com/#get-game>
     pub async fn game(&self, game_id: i32) -> surf::Result<Game> {
         let response = self
@@ -72,6 +59,19 @@ impl Client {
         let response: IntermResponse<_> = serde_json::from_slice(response.as_slice())?;
 
         Ok(response.data)
+    }
+
+    /// <https://docs.curseforge.com/#get-games>
+    pub async fn games(&self, params: &GamesParams) -> surf::Result<GamesResponse> {
+        let response = self
+            .inner
+            .get(&format!("games?{}", params.to_query_string()))
+            .recv_bytes()
+            .await?;
+
+        let response = serde_json::from_slice(response.as_slice())?;
+
+        Ok(response)
     }
 
     /// <https://docs.curseforge.com/#get-versions>
@@ -114,7 +114,7 @@ impl Client {
     }
 
     /// <https://docs.curseforge.com/#search-mods>
-    pub async fn search_mods(&self, params: &SearchModsParams) -> surf::Result<SearchModsResponse> {
+    pub async fn search(&self, params: &SearchParams) -> surf::Result<SearchProjectsResponse> {
         let response = self
             .inner
             .get(&format!("mods/search?{}", params.to_query_string()))
@@ -131,7 +131,7 @@ impl Client {
     /// This adheres to the limit of results defined by the
     /// [documentation](https://docs.curseforge.com/#pagination-limits),
     /// hardcoded by the constant [`API_PAGINATION_RESULTS_LIMIT`].
-    pub async fn search_mods_iter(&self, mut params: SearchModsParams) -> PaginatedStream<'_, Mod> {
+    pub async fn search_iter(&self, mut params: SearchParams) -> PaginatedStream<'_, Project> {
         PaginatedStream::new(
             |pagination, limit| {
                 // Construct a new iterator that can have items popped from the front.
@@ -142,7 +142,7 @@ impl Client {
 
                 Box::pin(try_stream! {
                     // Initialize `response` with the first result.
-                    let mut response = self.search_mods(&params).await?;
+                    let mut response = self.search_projects(&params).await?;
 
                     // Assign the response's `Pagination` value
                     // into the `RefCell` provided in the arguments.
@@ -175,7 +175,7 @@ impl Client {
                             // This has continued, meaning we haven't yet reached the limit.
                             // Get the next page of search results, the index for which
                             // has been set on the previous iteration (or before entering the loop).
-                            response = self.search_mods(&params).await?;
+                            response = self.search_projects(&params).await?;
                             // Assign the response's new `Pagination` to the `RefMut`
                             // from the arguments, this will be available by
                             // the `pagination()` method on `PaginatedStream`.
@@ -211,7 +211,7 @@ impl Client {
     /// <https://docs.curseforge.com/#get-mod>
     ///
     /// Renamed from `mod` to `addon` because the former is a keyword.
-    pub async fn addon(&self, mod_id: i32) -> surf::Result<Mod> {
+    pub async fn project(&self, mod_id: i32) -> surf::Result<Project> {
         let response = self
             .inner
             .get(&format!("mods/{}", mod_id))
@@ -224,7 +224,7 @@ impl Client {
     }
 
     /// <https://docs.curseforge.com/#get-mods>
-    pub async fn addons<I>(&self, mod_ids: I) -> surf::Result<Vec<Mod>>
+    pub async fn projects<I>(&self, mod_ids: I) -> surf::Result<Vec<Project>>
     where
         I: IntoIterator<Item = i32>,
     {

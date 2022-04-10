@@ -13,14 +13,14 @@ use super::nullable_string;
 /// <https://docs.curseforge.com/#search-mods>
 #[derive(Clone, Debug, PartialEq, Serialize, QueryString)]
 #[serde(rename_all = "camelCase")]
-pub struct SearchModsParams {
+pub struct SearchParams {
     pub game_id: i32,
     pub class_id: Option<i32>,
     pub category_id: Option<i32>,
     pub game_version: Option<String>,
     pub search_filter: Option<String>,
-    pub sort_field: Option<SearchModsSort>,
-    pub sort_order: Option<SortOrder>,
+    pub sort_field: Option<SearchSort>,
+    pub sort_order: Option<SearchSortOrder>,
     pub mod_loader_type: Option<ModLoaderType>,
     pub game_version_type_id: Option<i32>,
     pub slug: Option<String>,
@@ -28,7 +28,7 @@ pub struct SearchModsParams {
     pub page_size: Option<i32>,
 }
 
-impl SearchModsParams {
+impl SearchParams {
     pub fn game(game_id: i32) -> Self {
         Self {
             game_id,
@@ -50,7 +50,7 @@ impl SearchModsParams {
 /// <https://docs.curseforge.com/#search-mods>
 #[derive(Clone, Debug, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(u8)]
-pub enum SearchModsSort {
+pub enum SearchSort {
     Featured = 1,
     Popularity = 2,
     LastUpdated = 3,
@@ -63,7 +63,7 @@ pub enum SearchModsSort {
 
 /// <https://docs.curseforge.com/#tocS_SortOrder>
 #[derive(Clone, Debug, PartialEq, EnumString, Display, SerializeDisplay, DeserializeFromStr)]
-pub enum SortOrder {
+pub enum SearchSortOrder {
     #[strum(serialize = "asc")]
     Ascending,
     #[strum(serialize = "desc")]
@@ -85,8 +85,8 @@ pub enum ModLoaderType {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-pub struct SearchModsResponse {
-    pub data: Vec<Mod>,
+pub struct SearchProjectsResponse {
+    pub data: Vec<Project>,
     pub pagination: Pagination,
 }
 
@@ -94,22 +94,22 @@ pub struct SearchModsResponse {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-pub struct Mod {
+pub struct Project {
     pub id: i32,
     pub game_id: i32,
     pub name: String,
     pub slug: String,
-    pub links: ModLinks,
+    pub links: ProjectLinks,
     pub summary: String,
-    pub status: ModStatus,
+    pub status: ProjectStatus,
     pub download_count: f64,
     pub is_featured: bool,
     pub primary_category_id: u32,
     pub categories: Vec<Category>,
     pub class_id: Option<i32>,
-    pub authors: Vec<ModAuthor>,
-    pub logo: Option<ModAsset>,
-    pub screenshots: Vec<ModAsset>,
+    pub authors: Vec<ProjectAuthor>,
+    pub logo: Option<ProjectAsset>,
+    pub screenshots: Vec<ProjectAsset>,
     pub main_file_id: i32,
     pub latest_files: Vec<File>,
     pub latest_files_indexes: Vec<FileIndex>,
@@ -125,7 +125,7 @@ pub struct Mod {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-pub struct ModLinks {
+pub struct ProjectLinks {
     pub website_url: String,
     #[serde(deserialize_with = "nullable_string")]
     pub wiki_url: Option<String>,
@@ -138,7 +138,7 @@ pub struct ModLinks {
 /// <https://docs.curseforge.com/#tocS_ModLinks>
 #[derive(Clone, Debug, PartialEq, Serialize_repr, Deserialize_repr)]
 #[repr(u8)]
-pub enum ModStatus {
+pub enum ProjectStatus {
     New = 1,
     ChangesRequired = 2,
     UnderSoftReview = 3,
@@ -155,7 +155,7 @@ pub enum ModStatus {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-pub struct ModAuthor {
+pub struct ProjectAuthor {
     pub id: i32,
     pub name: String,
     pub url: String,
@@ -165,7 +165,7 @@ pub struct ModAuthor {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-pub struct ModAsset {
+pub struct ProjectAsset {
     pub id: i32,
     pub mod_id: i32,
     pub title: String,

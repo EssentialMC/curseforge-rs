@@ -2,13 +2,13 @@ pub(crate) mod categories;
 pub(crate) mod core;
 pub(crate) mod file;
 pub(crate) mod games;
-pub(crate) mod mods;
+pub(crate) mod projects;
 
 pub use self::categories::*;
 pub use self::core::*;
 pub use self::file::*;
 pub use self::games::*;
-pub use self::mods::*;
+pub use self::projects::*;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Deserializer};
@@ -28,7 +28,6 @@ pub(crate) struct IntermResponse<T> {
     pub data: T,
 }
 
-#[macro_export]
 macro_rules! request_several_body {
     ($field:ident, $field_type:ty, $iter:expr) => {{
         use ::serde::Serialize;

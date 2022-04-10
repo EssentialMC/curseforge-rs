@@ -11,7 +11,7 @@ use super::types::core::Pagination;
 /// API's limit of maximum results, as well as the [`Pagination`] resulting from
 /// every new request. The heavy lifting here is done by the closure, which must
 /// return the [`Stream`] that this is intended to wrap. For an example of such
-/// an implementation, see the source for the [`Client::search_mods_iter`]
+/// an implementation, see the source for the [`Client::search_projects_iter`]
 /// method.
 pub struct PaginatedStream<'ps, T> {
     // This needs to be pinned because `Stream` should be immovable,
