@@ -100,6 +100,17 @@ pub mod params {
         #[strum(serialize = "desc")]
         Descending,
     }
+
+    /// <https://docs.curseforge.com/#get-mod-files>
+    #[derive(Clone, Debug, PartialEq, Serialize /* , QueryString */)]
+    #[serde(rename_all = "camelCase")]
+    pub struct ProjectFilesParams {
+        pub game_version: Option<String>,
+        pub mod_loader_type: Option<ModLoaderType>,
+        pub game_version_type_id: Option<i32>,
+        pub index: Option<i32>,
+        pub page_size: Option<i32>,
+    }
 }
 
 pub(crate) mod body {
@@ -136,6 +147,7 @@ pub mod response {
     /// - <https://docs.curseforge.com/#tocS_Get%20Game%20Response>
     /// - <https://docs.curseforge.com/#tocS_Get%20Mod%20Response>
     /// - <https://docs.curseforge.com/#tocS_Get%20Mods%20Response>
+    /// - <https://docs.curseforge.com/#tocS_Get%20Mod%20File%20Response>
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(deny_unknown_fields)]
     pub struct DataResponse<T> {
@@ -146,6 +158,7 @@ pub mod response {
     ///
     /// - <https://docs.curseforge.com/#tocS_Get%20Games%20Response>
     /// - <https://docs.curseforge.com/#tocS_Search%20Mods%20Response>
+    /// - <https://docs.curseforge.com/#tocS_Get%20Mod%20Files%20Response>
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(deny_unknown_fields)]
     pub struct PaginatedDataResponse<T> {

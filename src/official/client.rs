@@ -4,9 +4,9 @@ use async_stream::try_stream;
 
 use super::request::body::request_several_body;
 use super::request::paginated::PaginatedStream;
-use super::request::params::{CategoriesParams, GamesParams, SearchParams};
+use super::request::params::{CategoriesParams, GamesParams, ProjectFilesParams, SearchParams};
 use super::request::response::{DataResponse, PaginatedDataResponse};
-use super::types::{Category, Game, GameVersionType, GameVersions, Project};
+use super::types::{Category, File, Game, GameVersionType, GameVersions, Project};
 
 /// This is the official CurseForge Core API base URL.
 /// You must pass it to constructors explicitly.
@@ -243,5 +243,40 @@ impl Client {
         let response: DataResponse<_> = serde_json::from_slice(bytes.as_slice())?;
 
         Ok(response.data)
+    }
+
+    /// <https://docs.curseforge.com/#get-mod-file>
+    pub async fn project_file(&self, mod_id: i32, file_id: i32) -> surf::Result<File> {
+        let response = self
+            .inner
+            .get(&format!("mods/{}/files/{}", mod_id, file_id))
+            .recv_bytes()
+            .await?;
+
+        let response: DataResponse<_> = serde_json::from_slice(response.as_slice())?;
+
+        Ok(response.data)
+    }
+
+    /// <https://docs.curseforge.com/#get-files>
+    pub async fn project_files(
+        &self,
+        mod_id: i32,
+        params: Option<&ProjectFilesParams>,
+    ) -> surf::Result<PaginatedDataResponse<File>> {
+        let mut request = self.inner.post(&format!("mods/{}/files", mod_id));
+
+        if let Some(params) = params {
+            request = request.query(params)?;
+        }
+
+        let request = request.build();
+
+        let mut response = self.inner.send(request).await?;
+        let bytes = response.body_bytes().await?;
+
+        let response = serde_json::from_slice(bytes.as_slice())?;
+
+        Ok(response)
     }
 }
