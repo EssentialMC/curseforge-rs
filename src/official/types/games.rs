@@ -62,8 +62,7 @@ pub struct GameAssets {
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct GameVersions {
-    #[serde(rename = "type")]
-    pub kind: i32,
+    pub r#type: i32,
     pub versions: Vec<String>,
 }
 
