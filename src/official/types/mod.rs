@@ -20,11 +20,32 @@ use serde::{Deserialize, Deserializer};
 /// <https://docs.curseforge.com/#tocS_Get%20Version%20Types%20Response>
 /// <https://docs.curseforge.com/#tocS_Get%20Categories%20Response>
 /// <https://docs.curseforge.com/#tocS_Get%20Game%20Response>
+/// <https://docs.curseforge.com/#tocS_Get%20Mod%20Response>
+/// <https://docs.curseforge.com/#tocS_Get%20Mods%20Response>
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct IntermResponse<T> {
     pub data: T,
 }
+
+#[macro_export]
+macro_rules! request_several_body {
+    ($field:ident, $field_type:ty, $iter:expr) => {{
+        use ::serde::Serialize;
+
+        #[derive(Serialize)]
+        #[serde(rename_all = "camelCase")]
+        struct _RequestBody {
+            $field: Vec<$field_type>,
+        }
+
+        _RequestBody {
+            $field: $iter.collect(),
+        }
+    }};
+}
+
+pub(crate) use request_several_body;
 
 pub(crate) fn nullable_string<'de, D: Deserializer<'de>>(
     deser: D,

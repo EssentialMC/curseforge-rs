@@ -145,3 +145,61 @@ fn search_mods_iter() {
         }
     });
 }
+
+#[test]
+fn addon() {
+    const MOUSE_TWEAKS_MOD_ID: i32 = 60089;
+
+    smol::block_on(async {
+        let client = Client::new(API_BASE, None).unwrap();
+
+        let addon = client.addon(MOUSE_TWEAKS_MOD_ID).await;
+
+        match &addon {
+            Ok(categories) => println!("{:#?}", categories),
+            Err(error) => eprintln!("{:#?}", error),
+        }
+
+        assert!(addon.is_ok());
+    });
+}
+
+#[test]
+fn addons() {
+    use smol::pin;
+    use smol::stream::StreamExt;
+
+    let client = Client::new(API_BASE, None).unwrap();
+    let params = SearchModsParams::game(GAME_MINECRAFT);
+
+    smol::block_on(async {
+        let mods_iter = client.search_mods_iter(params).await;
+        pin!(mods_iter);
+
+        let mut count = 0;
+        let mut mod_ids: Vec<i32> = Vec::new();
+
+        while let Some(item) = mods_iter.next().await {
+            match &item {
+                Ok(item) => {
+                    count += 1;
+                    mod_ids.extend(&[item.id]);
+                }
+                Err(error) => {
+                    eprintln!("Error encountered after {} results!\n{:#?}", count, error)
+                }
+            }
+
+            assert!(item.is_ok());
+
+            if count >= 1000 {
+                break;
+            }
+        }
+
+        let mods = client.addons(mod_ids).await.unwrap();
+        let file = std::fs::File::create("./target/tests/addons.json").unwrap();
+
+        serde_json::to_writer_pretty(file, &mods).unwrap();
+    });
+}

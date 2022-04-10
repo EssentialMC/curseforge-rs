@@ -222,4 +222,20 @@ impl Client {
 
         Ok(response.data)
     }
+
+    /// <https://docs.curseforge.com/#get-mods>
+    pub async fn addons<I>(&self, mod_ids: I) -> surf::Result<Vec<Mod>>
+    where
+        I: IntoIterator<Item = i32>,
+    {
+        let body = request_several_body!(mod_ids, i32, mod_ids.into_iter());
+        let request = self.inner.post("mods").body_json(&body)?.build();
+
+        let mut response = self.inner.send(request).await?;
+        let bytes = response.body_bytes().await?;
+
+        let response: IntermResponse<_> = serde_json::from_slice(bytes.as_slice())?;
+
+        Ok(response.data)
+    }
 }
