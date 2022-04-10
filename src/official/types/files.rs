@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
-use super::nullable_string;
+use super::fixes::nullable_string;
 use super::projects::ModLoaderType;
 
 /// <https://docs.curseforge.com/#tocS_File>

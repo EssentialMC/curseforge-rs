@@ -2,8 +2,11 @@ use std::collections::VecDeque;
 
 use async_stream::try_stream;
 
-use super::paginate::*;
-use super::types::*;
+use super::request::body::request_several_body;
+use super::request::paginated::PaginatedStream;
+use super::request::params::{CategoriesParams, GamesParams, SearchParams};
+use super::request::response::{DataResponse, PaginatedDataResponse};
+use super::types::{Category, Game, GameVersionType, GameVersions, Project};
 
 /// This is the official CurseForge Core API base URL.
 /// You must pass it to constructors explicitly.
@@ -56,13 +59,13 @@ impl Client {
             .recv_bytes()
             .await?;
 
-        let response: IntermResponse<_> = serde_json::from_slice(response.as_slice())?;
+        let response: DataResponse<_> = serde_json::from_slice(response.as_slice())?;
 
         Ok(response.data)
     }
 
     /// <https://docs.curseforge.com/#get-games>
-    pub async fn games(&self, params: &GamesParams) -> surf::Result<GamesResponse> {
+    pub async fn games(&self, params: &GamesParams) -> surf::Result<PaginatedDataResponse<Game>> {
         let response = self
             .inner
             .get(&format!("games?{}", params.to_query_string()))
@@ -82,7 +85,7 @@ impl Client {
             .recv_bytes()
             .await?;
 
-        let response: IntermResponse<_> = serde_json::from_slice(response.as_slice())?;
+        let response: DataResponse<_> = serde_json::from_slice(response.as_slice())?;
 
         Ok(response.data)
     }
@@ -95,7 +98,7 @@ impl Client {
             .recv_bytes()
             .await?;
 
-        let response: IntermResponse<_> = serde_json::from_slice(response.as_slice())?;
+        let response: DataResponse<_> = serde_json::from_slice(response.as_slice())?;
 
         Ok(response.data)
     }
@@ -108,13 +111,16 @@ impl Client {
             .recv_bytes()
             .await?;
 
-        let response: IntermResponse<_> = serde_json::from_slice(response.as_slice())?;
+        let response: DataResponse<_> = serde_json::from_slice(response.as_slice())?;
 
         Ok(response.data)
     }
 
     /// <https://docs.curseforge.com/#search-mods>
-    pub async fn search(&self, params: &SearchParams) -> surf::Result<SearchProjectsResponse> {
+    pub async fn search(
+        &self,
+        params: &SearchParams,
+    ) -> surf::Result<PaginatedDataResponse<Project>> {
         let response = self
             .inner
             .get(&format!("mods/search?{}", params.to_query_string()))
@@ -142,7 +148,7 @@ impl Client {
 
                 Box::pin(try_stream! {
                     // Initialize `response` with the first result.
-                    let mut response = self.search_projects(&params).await?;
+                    let mut response = self.search(&params).await?;
 
                     // Assign the response's `Pagination` value
                     // into the `RefCell` provided in the arguments.
@@ -175,7 +181,7 @@ impl Client {
                             // This has continued, meaning we haven't yet reached the limit.
                             // Get the next page of search results, the index for which
                             // has been set on the previous iteration (or before entering the loop).
-                            response = self.search_projects(&params).await?;
+                            response = self.search(&params).await?;
                             // Assign the response's new `Pagination` to the `RefMut`
                             // from the arguments, this will be available by
                             // the `pagination()` method on `PaginatedStream`.
@@ -218,7 +224,7 @@ impl Client {
             .recv_bytes()
             .await?;
 
-        let response: IntermResponse<_> = serde_json::from_slice(response.as_slice())?;
+        let response: DataResponse<_> = serde_json::from_slice(response.as_slice())?;
 
         Ok(response.data)
     }
@@ -234,7 +240,7 @@ impl Client {
         let mut response = self.inner.send(request).await?;
         let bytes = response.body_bytes().await?;
 
-        let response: IntermResponse<_> = serde_json::from_slice(bytes.as_slice())?;
+        let response: DataResponse<_> = serde_json::from_slice(bytes.as_slice())?;
 
         Ok(response.data)
     }

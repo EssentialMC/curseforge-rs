@@ -1,25 +1,7 @@
 use chrono::{DateTime, Utc};
-use query_string::QueryString;
 use serde::{Deserialize, Serialize};
 
-use super::nullable_datetime;
-
-/// <https://docs.curseforge.com/#get-categories>
-#[derive(Clone, Debug, PartialEq, Serialize, QueryString)]
-#[serde(rename_all = "camelCase")]
-pub struct CategoriesParams {
-    pub game_id: i32,
-    pub class_id: Option<i32>,
-}
-
-impl CategoriesParams {
-    pub fn game(game_id: i32) -> Self {
-        Self {
-            game_id,
-            class_id: None,
-        }
-    }
-}
+use super::fixes::nullable_datetime;
 
 /// <https://docs.curseforge.com/#tocS_Category>
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

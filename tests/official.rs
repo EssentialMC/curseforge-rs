@@ -87,7 +87,7 @@ fn categories() {
 }
 
 #[test]
-fn search_projects() {
+fn search() {
     smol::block_on(async {
         let client = Client::new(API_BASE, None).unwrap();
 
@@ -107,7 +107,7 @@ fn search_projects() {
 }
 
 #[test]
-fn search_projects_iter() {
+fn search_iter() {
     use std::io::Write;
 
     use smol::pin;

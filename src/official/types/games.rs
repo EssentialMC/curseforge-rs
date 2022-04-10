@@ -1,34 +1,8 @@
 use chrono::{DateTime, Utc};
-use query_string::QueryString;
 use serde::{Deserialize, Serialize};
 
-use super::core::{CoreApiStatus, CoreStatus, Pagination};
-use super::nullable_string;
-
-/// <https://docs.curseforge.com/#get-games>
-#[derive(Clone, Debug, Default, PartialEq, Serialize, QueryString)]
-#[serde(rename_all = "camelCase")]
-pub struct GamesParams {
-    pub index: Option<i32>,
-    pub page_size: Option<i32>,
-}
-
-/// <https://docs.curseforge.com/#tocS_Get%20Games%20Response>
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
-pub struct GamesResponse {
-    pub data: Vec<Game>,
-    pub pagination: Pagination,
-}
-
-/// <https://docs.curseforge.com/#tocS_Get%20Game%20Response>
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-#[serde(deny_unknown_fields)]
-pub struct GameResponse {
-    pub data: Game,
-}
+use super::core::{CoreApiStatus, CoreStatus};
+use super::fixes::nullable_string;
 
 /// <https://docs.curseforge.com/#tocS_Game>
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
