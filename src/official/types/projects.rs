@@ -46,6 +46,7 @@ pub struct Project {
     pub allow_mod_distribution: Option<bool>,
     pub game_popularity_rank: i32,
     pub is_available: bool,
+    pub thumbs_up_count: Option<i64>,
 }
 
 /// <https://docs.curseforge.com/#tocS_ModLinks>
