@@ -17,6 +17,7 @@ surf = "2.3"
 #futures-core = { version = "0.3", default-features = false }
 futures-lite = "1.12"
 async-stream = "0.3"
+awaur = "0.1"
 query_string = { path = "query_string" }
 
 [dev-dependencies]
