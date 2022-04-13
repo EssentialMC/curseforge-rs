@@ -95,7 +95,8 @@ pub struct ProjectAuthor {
 #[serde(deny_unknown_fields)]
 pub struct ProjectAsset {
     pub id: i32,
-    pub mod_id: i32,
+    #[serde(rename = "modId")]
+    pub project_id: i32,
     pub title: String,
     #[serde(deserialize_with = "nullable_string")]
     pub description: Option<String>,

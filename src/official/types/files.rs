@@ -12,7 +12,8 @@ use super::projects::ModLoaderType;
 pub struct File {
     pub id: i32,
     pub game_id: i32,
-    pub mod_id: i32,
+    #[serde(rename = "modId")]
+    pub project_id: i32,
     pub is_available: bool,
     pub display_name: String,
     pub file_name: String,
@@ -117,7 +118,8 @@ pub struct SortableGameVersion {
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct FileDependency {
-    pub mod_id: i32,
+    #[serde(rename = "modId")]
+    pub project_id: i32,
     pub relation_type: FileRelationType,
 }
 

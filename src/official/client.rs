@@ -164,11 +164,12 @@ impl Client {
 
     /// <https://docs.curseforge.com/#get-mod>
     ///
-    /// Renamed from `mod` to `addon` because the former is a keyword.
-    pub async fn project(&self, mod_id: i32) -> surf::Result<Project> {
+    /// Renamed from `mod` to `project` because the former is a keyword, and the
+    /// API considers every "project" to be a "mod".
+    pub async fn project(&self, project_id: i32) -> surf::Result<Project> {
         let (_response, _bytes, value) = endpoint! {
             self get "mods/{}",
-            vars: [mod_id],
+            vars: [project_id],
             into: DataResponse<_>,
         };
 
@@ -176,13 +177,13 @@ impl Client {
     }
 
     /// <https://docs.curseforge.com/#get-mods>
-    pub async fn projects<I>(&self, mod_ids: I) -> surf::Result<Vec<Project>>
+    pub async fn projects<I>(&self, project_ids: I) -> surf::Result<Vec<Project>>
     where
         I: IntoIterator<Item = i32>,
     {
         let (_response, _bytes, value) = endpoint! {
             self post "mods",
-            body: Some(&request_several_body!(mod_ids, i32, mod_ids.into_iter())),
+            body: Some(&request_several_body!(mod_ids, i32, project_ids.into_iter())),
             into: DataResponse<_>,
         };
 
@@ -190,10 +191,10 @@ impl Client {
     }
 
     /// <https://docs.curseforge.com/#get-mod-file>
-    pub async fn project_file(&self, mod_id: i32, file_id: i32) -> surf::Result<File> {
+    pub async fn project_file(&self, project_id: i32, file_id: i32) -> surf::Result<File> {
         let (_response, _bytes, value) = endpoint! {
             self get "mods/{}/files/{}",
-            vars: [mod_id, file_id],
+            vars: [project_id, file_id],
             into: DataResponse<_>,
         };
 
@@ -203,12 +204,12 @@ impl Client {
     /// <https://docs.curseforge.com/#get-files>
     pub async fn project_files(
         &self,
-        mod_id: i32,
+        project_id: i32,
         params: Option<&ProjectFilesParams>,
     ) -> surf::Result<PaginatedDataResponse<File>> {
         let (_response, _bytes, value) = endpoint! {
             self get "mods/{}/files",
-            vars: [mod_id],
+            vars: [project_id],
             params: params,
             into: PaginatedDataResponse<_>,
         };
