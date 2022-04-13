@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use awaur::paginator::{PaginatedStream, PaginationDelegate};
+use serde::Serialize;
 
 use super::request::body::request_several_body;
 use super::request::params::{CategoriesParams, GamesParams, ProjectFilesParams, SearchParams};
@@ -10,6 +11,37 @@ use super::types::{Category, File, Game, GameVersionType, GameVersions, Paginati
 /// You must pass it to constructors explicitly.
 pub const DEFAULT_API_BASE: &str = "https://api.curseforge.com/v1/";
 pub const API_PAGINATION_RESULTS_LIMIT: usize = 10_000;
+
+macro_rules! endpoint {
+    (
+        $self:ident $method:ident $uri:literal,
+        $(vars: [$($var:ident),+],)?
+        $(params: $params:expr,)?
+        $(body: $body:expr,)?
+        into: $into:path,
+    ) => {{
+        #[allow(unused_mut)]
+        let mut request = endpoint!(@init, $self, $method, $uri $(, [$($var),*])?);
+        $(if let Some(params) = $params {
+            request = request.query(params)?;
+        })?
+        $(if let Some(body) = $body {
+            request = request.body_json(body)?;
+        })?
+        let request = request.build();
+        let mut response = $self.inner.send(request).await?;
+        let bytes = response.body_bytes().await?;
+        let value: $into = serde_json::from_slice(bytes.as_slice())?;
+
+        (response, bytes, value)
+    }};
+    (@init, $self:ident, $method:ident, $uri:literal) => {
+        $self.inner.$method($uri)
+    };
+    (@init, $self:ident, $method:ident, $uri:literal, [$($var:ident),+]) => {
+        $self.inner.$method(&format!($uri, $($var),*))
+    };
+}
 
 #[derive(Clone, Debug)]
 pub struct Client {
@@ -51,67 +83,57 @@ impl Client {
 
     /// <https://docs.curseforge.com/#get-game>
     pub async fn game(&self, game_id: i32) -> surf::Result<Game> {
-        let response = self
-            .inner
-            .get(&format!("games/{}", game_id))
-            .recv_bytes()
-            .await?;
+        let (_response, _bytes, value) = endpoint! {
+            self get "games/{}",
+            vars: [game_id],
+            into: DataResponse<_>,
+        };
 
-        let response: DataResponse<_> = serde_json::from_slice(response.as_slice())?;
-
-        Ok(response.data)
+        Ok(value.data)
     }
 
     /// <https://docs.curseforge.com/#get-games>
     pub async fn games(&self, params: &GamesParams) -> surf::Result<PaginatedDataResponse<Game>> {
-        let response = self
-            .inner
-            .get(&format!("games?{}", params.to_query_string()))
-            .recv_bytes()
-            .await?;
+        let (_response, _bytes, value) = endpoint! {
+            self get "games",
+            params: Some(params),
+            into: PaginatedDataResponse<_>,
+        };
 
-        let response = serde_json::from_slice(response.as_slice())?;
-
-        Ok(response)
+        Ok(value)
     }
 
     /// <https://docs.curseforge.com/#get-versions>
     pub async fn game_versions(&self, game_id: i32) -> surf::Result<Vec<GameVersions>> {
-        let response = self
-            .inner
-            .get(&format!("games/{}/versions", game_id))
-            .recv_bytes()
-            .await?;
+        let (_response, _bytes, value) = endpoint! {
+            self get "games/{}/versions",
+            vars: [game_id],
+            into: DataResponse<_>,
+        };
 
-        let response: DataResponse<_> = serde_json::from_slice(response.as_slice())?;
-
-        Ok(response.data)
+        Ok(value.data)
     }
 
     /// <https://docs.curseforge.com/#get-version-types>
     pub async fn game_version_types(&self, game_id: i32) -> surf::Result<Vec<GameVersionType>> {
-        let response = self
-            .inner
-            .get(&format!("games/{}/version-types", game_id))
-            .recv_bytes()
-            .await?;
+        let (_response, _bytes, value) = endpoint! {
+            self get "games/{}/version-types",
+            vars: [game_id],
+            into: DataResponse<_>,
+        };
 
-        let response: DataResponse<_> = serde_json::from_slice(response.as_slice())?;
-
-        Ok(response.data)
+        Ok(value.data)
     }
 
     /// <https://docs.curseforge.com/#get-categories>
     pub async fn categories(&self, params: &CategoriesParams) -> surf::Result<Vec<Category>> {
-        let response = self
-            .inner
-            .get(&format!("categories?{}", params.to_query_string()))
-            .recv_bytes()
-            .await?;
+        let (_response, _bytes, value) = endpoint! {
+            self get "categories",
+            params: Some(params),
+            into: DataResponse<_>,
+        };
 
-        let response: DataResponse<_> = serde_json::from_slice(response.as_slice())?;
-
-        Ok(response.data)
+        Ok(value.data)
     }
 
     /// <https://docs.curseforge.com/#search-mods>
@@ -119,14 +141,13 @@ impl Client {
         &self,
         params: &SearchParams,
     ) -> surf::Result<PaginatedDataResponse<Project>> {
-        let request = self.inner.get("mods/search").query(params).unwrap().build();
-        let mut response = self.inner.send(request).await?;
+        let (_response, _bytes, value) = endpoint! {
+            self get "mods/search",
+            params: Some(params),
+            into: PaginatedDataResponse<_>,
+        };
 
-        let bytes = response.body_bytes().await?;
-
-        let response = serde_json::from_slice(bytes.as_slice())?;
-
-        Ok(response)
+        Ok(value)
     }
 
     /// <https://docs.curseforge.com/#search-mods>
@@ -145,15 +166,13 @@ impl Client {
     ///
     /// Renamed from `mod` to `addon` because the former is a keyword.
     pub async fn project(&self, mod_id: i32) -> surf::Result<Project> {
-        let response = self
-            .inner
-            .get(&format!("mods/{}", mod_id))
-            .recv_bytes()
-            .await?;
+        let (_response, _bytes, value) = endpoint! {
+            self get "mods/{}",
+            vars: [mod_id],
+            into: DataResponse<_>,
+        };
 
-        let response: DataResponse<_> = serde_json::from_slice(response.as_slice())?;
-
-        Ok(response.data)
+        Ok(value.data)
     }
 
     /// <https://docs.curseforge.com/#get-mods>
@@ -161,28 +180,24 @@ impl Client {
     where
         I: IntoIterator<Item = i32>,
     {
-        let body = request_several_body!(mod_ids, i32, mod_ids.into_iter());
-        let request = self.inner.post("mods").body_json(&body)?.build();
+        let (_response, _bytes, value) = endpoint! {
+            self post "mods",
+            body: Some(&request_several_body!(mod_ids, i32, mod_ids.into_iter())),
+            into: DataResponse<_>,
+        };
 
-        let mut response = self.inner.send(request).await?;
-        let bytes = response.body_bytes().await?;
-
-        let response: DataResponse<_> = serde_json::from_slice(bytes.as_slice())?;
-
-        Ok(response.data)
+        Ok(value.data)
     }
 
     /// <https://docs.curseforge.com/#get-mod-file>
     pub async fn project_file(&self, mod_id: i32, file_id: i32) -> surf::Result<File> {
-        let response = self
-            .inner
-            .get(&format!("mods/{}/files/{}", mod_id, file_id))
-            .recv_bytes()
-            .await?;
+        let (_response, _bytes, value) = endpoint! {
+            self get "mods/{}/files/{}",
+            vars: [mod_id, file_id],
+            into: DataResponse<_>,
+        };
 
-        let response: DataResponse<_> = serde_json::from_slice(response.as_slice())?;
-
-        Ok(response.data)
+        Ok(value.data)
     }
 
     /// <https://docs.curseforge.com/#get-files>
@@ -191,20 +206,14 @@ impl Client {
         mod_id: i32,
         params: Option<&ProjectFilesParams>,
     ) -> surf::Result<PaginatedDataResponse<File>> {
-        let mut request = self.inner.post(&format!("mods/{}/files", mod_id));
+        let (_response, _bytes, value) = endpoint! {
+            self get "mods/{}/files",
+            vars: [mod_id],
+            params: params,
+            into: PaginatedDataResponse<_>,
+        };
 
-        if let Some(params) = params {
-            request = request.query(params)?;
-        }
-
-        let request = request.build();
-
-        let mut response = self.inner.send(request).await?;
-        let bytes = response.body_bytes().await?;
-
-        let response = serde_json::from_slice(bytes.as_slice())?;
-
-        Ok(response)
+        Ok(value)
     }
 }
 
