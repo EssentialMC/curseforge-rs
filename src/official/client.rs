@@ -12,14 +12,14 @@ pub const API_PAGINATION_RESULTS_LIMIT: usize = 10_000;
 
 macro_rules! endpoint {
     (
-        $self:ident $method:ident $uri:literal,
+        $($subj_frag:ident).+ $method:ident $uri:literal,
         $(vars: [$($var:ident),+],)?
         $(params: $params:expr,)?
         $(body: $body:expr,)?
         into: $into:path,
     ) => {{
         #[allow(unused_mut)]
-        let mut request = endpoint!(@init, $self, $method, $uri $(, [$($var),*])?);
+        let mut request = endpoint!(@init, $($subj_frag).*, $method, $uri $(, [$($var),*])?);
         $(if let Some(params) = $params {
             request = request.query(params)?;
         })?
@@ -27,17 +27,17 @@ macro_rules! endpoint {
             request = request.body_json(body)?;
         })?
         let request = request.build();
-        let mut response = $self.inner.send(request).await?;
+        let mut response = $($subj_frag).*.send(request).await?;
         let bytes = response.body_bytes().await?;
         let value: $into = serde_json::from_slice(bytes.as_slice())?;
 
         (response, bytes, value)
     }};
-    (@init, $self:ident, $method:ident, $uri:literal) => {
-        $self.inner.$method($uri)
+    (@init, $($subj_frag:ident).+, $method:ident, $uri:literal) => {
+        $($subj_frag).*.$method($uri)
     };
-    (@init, $self:ident, $method:ident, $uri:literal, [$($var:ident),+]) => {
-        $self.inner.$method(&format!($uri, $($var),*))
+    (@init, $($subj_frag:ident).+, $method:ident, $uri:literal, [$($var:ident),+]) => {
+        $($subj_frag).*.$method(&format!($uri, $($var),*))
     };
 }
 
@@ -98,7 +98,7 @@ impl Client {
     /// <https://docs.curseforge.com/#get-game>
     pub async fn game(&self, game_id: i32) -> surf::Result<Game> {
         let (_response, _bytes, value) = endpoint! {
-            self get "games/{}",
+            self.inner get "games/{}",
             vars: [game_id],
             into: DataResponse<_>,
         };
@@ -109,7 +109,7 @@ impl Client {
     /// <https://docs.curseforge.com/#get-games>
     pub async fn games(&self, params: &GamesParams) -> surf::Result<PaginatedDataResponse<Game>> {
         let (_response, _bytes, value) = endpoint! {
-            self get "games",
+            self.inner get "games",
             params: Some(params),
             into: PaginatedDataResponse<_>,
         };
@@ -120,7 +120,7 @@ impl Client {
     /// <https://docs.curseforge.com/#get-versions>
     pub async fn game_versions(&self, game_id: i32) -> surf::Result<Vec<GameVersions>> {
         let (_response, _bytes, value) = endpoint! {
-            self get "games/{}/versions",
+            self.inner get "games/{}/versions",
             vars: [game_id],
             into: DataResponse<_>,
         };
@@ -131,7 +131,7 @@ impl Client {
     /// <https://docs.curseforge.com/#get-version-types>
     pub async fn game_version_types(&self, game_id: i32) -> surf::Result<Vec<GameVersionType>> {
         let (_response, _bytes, value) = endpoint! {
-            self get "games/{}/version-types",
+            self.inner get "games/{}/version-types",
             vars: [game_id],
             into: DataResponse<_>,
         };
@@ -142,7 +142,7 @@ impl Client {
     /// <https://docs.curseforge.com/#get-categories>
     pub async fn categories(&self, params: &CategoriesParams) -> surf::Result<Vec<Category>> {
         let (_response, _bytes, value) = endpoint! {
-            self get "categories",
+            self.inner get "categories",
             params: Some(params),
             into: DataResponse<_>,
         };
@@ -156,7 +156,7 @@ impl Client {
         params: &SearchParams,
     ) -> surf::Result<PaginatedDataResponse<Project>> {
         let (_response, _bytes, value) = endpoint! {
-            self get "mods/search",
+            self.inner get "mods/search",
             params: Some(params),
             into: PaginatedDataResponse<_>,
         };
@@ -182,7 +182,7 @@ impl Client {
     /// API considers every "project" to be a "mod".
     pub async fn project(&self, project_id: i32) -> surf::Result<Project> {
         let (_response, _bytes, value) = endpoint! {
-            self get "mods/{}",
+            self.inner get "mods/{}",
             vars: [project_id],
             into: DataResponse<_>,
         };
@@ -196,7 +196,7 @@ impl Client {
         I: IntoIterator<Item = i32>,
     {
         let (_response, _bytes, value) = endpoint! {
-            self post "mods",
+            self.inner post "mods",
             body: Some(&several_body!("modIds", i32, project_ids.into_iter())),
             into: DataResponse<_>,
         };
@@ -207,7 +207,7 @@ impl Client {
     /// <https://docs.curseforge.com/#get-mod-file>
     pub async fn project_file(&self, project_id: i32, file_id: i32) -> surf::Result<File> {
         let (_response, _bytes, value) = endpoint! {
-            self get "mods/{}/files/{}",
+            self.inner get "mods/{}/files/{}",
             vars: [project_id, file_id],
             into: DataResponse<_>,
         };
@@ -222,7 +222,7 @@ impl Client {
         params: Option<&ProjectFilesParams>,
     ) -> surf::Result<PaginatedDataResponse<File>> {
         let (_response, _bytes, value) = endpoint! {
-            self get "mods/{}/files",
+            self.inner get "mods/{}/files",
             vars: [project_id],
             params: params,
             into: PaginatedDataResponse<_>,
