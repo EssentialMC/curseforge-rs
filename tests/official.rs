@@ -107,41 +107,36 @@ fn search() {
 }
 
 #[test]
+#[ignore]
 fn search_iter() {
-    use std::io::Write;
-
     use smol::pin;
     use smol::stream::StreamExt;
 
-    let client = Client::new(API_BASE, None).unwrap();
-    let params = SearchParams::game(GAME_MINECRAFT);
-
-    // params.index = Some(5000);
-
     smol::block_on(async {
-        let mods_iter = client.search_iter(params).await;
-        pin!(mods_iter);
+        let client = Client::new(API_BASE, None).unwrap();
+        let params = SearchParams::game(GAME_MINECRAFT);
+
+        let projects_iter = client.search_iter(params).await;
+        pin!(projects_iter);
 
         let mut count = 0;
 
-        while let Some(item) = mods_iter.next().await {
-            match &item {
+        while let Some(project) = projects_iter.next().await {
+            if count >= 150 {
+                break;
+            }
+
+            match &project {
                 Ok(item) => {
                     count += 1;
-                    let mut file = std::fs::File::create(&format!(
-                        "./target/tests/search_mods_iter/{}.json",
-                        item.slug
-                    ))
-                    .unwrap();
-                    file.write_all(serde_json::to_vec(&item).unwrap().as_slice())
-                        .unwrap();
+                    println!("{:#?}", item);
                 }
                 Err(error) => {
                     eprintln!("Error encountered after {} results!\n{:#?}", count, error)
                 }
             }
 
-            assert!(item.is_ok());
+            assert!(project.is_ok());
         }
     });
 }
