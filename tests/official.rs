@@ -166,40 +166,17 @@ fn project() {
 
 #[test]
 fn projects() {
-    use smol::pin;
-    use smol::stream::StreamExt;
-
     let client = Client::new(API_BASE, None).unwrap();
-    let params = SearchParams::game(GAME_MINECRAFT);
+    let mod_ids = [269024, 60089, 398022, 381583];
 
     smol::block_on(async {
-        let mods_iter = client.search_iter(params).await;
-        pin!(mods_iter);
+        let projects = client.projects(mod_ids).await;
 
-        let mut count = 0;
-        let mut mod_ids: Vec<i32> = Vec::new();
-
-        while let Some(item) = mods_iter.next().await {
-            match &item {
-                Ok(item) => {
-                    count += 1;
-                    mod_ids.extend(&[item.id]);
-                }
-                Err(error) => {
-                    eprintln!("Error encountered after {} results!\n{:#?}", count, error)
-                }
-            }
-
-            assert!(item.is_ok());
-
-            if count >= 1000 {
-                break;
-            }
+        match &projects {
+            Ok(projects) => println!("{:#?}", projects),
+            Err(error) => eprintln!("{:#?}", error),
         }
 
-        let projects = client.projects(mod_ids).await.unwrap();
-        let file = std::fs::File::create("./target/tests/addons.json").unwrap();
-
-        serde_json::to_writer_pretty(file, &projects).unwrap();
+        assert!(projects.is_ok())
     });
 }
