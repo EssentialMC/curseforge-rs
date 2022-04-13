@@ -1,12 +1,10 @@
-use std::collections::VecDeque;
-
-use async_stream::try_stream;
+use async_trait::async_trait;
+use awaur::paginator::{PaginatedStream, PaginationDelegate};
 
 use super::request::body::request_several_body;
-use super::request::paginated::PaginatedStream;
 use super::request::params::{CategoriesParams, GamesParams, ProjectFilesParams, SearchParams};
 use super::request::response::{DataResponse, PaginatedDataResponse};
-use super::types::{Category, File, Game, GameVersionType, GameVersions, Project};
+use super::types::{Category, File, Game, GameVersionType, GameVersions, Pagination, Project};
 
 /// This is the official CurseForge Core API base URL.
 /// You must pass it to constructors explicitly.
@@ -121,13 +119,12 @@ impl Client {
         &self,
         params: &SearchParams,
     ) -> surf::Result<PaginatedDataResponse<Project>> {
-        let response = self
-            .inner
-            .get(&format!("mods/search?{}", params.to_query_string()))
-            .recv_bytes()
-            .await?;
+        let request = self.inner.get("mods/search").query(params).unwrap().build();
+        let mut response = self.inner.send(request).await?;
 
-        let response = serde_json::from_slice(response.as_slice())?;
+        let bytes = response.body_bytes().await?;
+
+        let response = serde_json::from_slice(bytes.as_slice())?;
 
         Ok(response)
     }
@@ -137,81 +134,11 @@ impl Client {
     /// This adheres to the limit of results defined by the
     /// [documentation](https://docs.curseforge.com/#pagination-limits),
     /// hardcoded by the constant [`API_PAGINATION_RESULTS_LIMIT`].
-    pub async fn search_iter(&self, mut params: SearchParams) -> PaginatedStream<'_, Project> {
-        PaginatedStream::new(
-            |pagination, limit| {
-                // Construct a new iterator that can have items popped from the front.
-                let mut items = VecDeque::new();
-                // If the callee didn't specify a starting index, set it to `0` so that
-                // this value can be conveniently unwrapped.
-                params.index = params.index.or(Some(0));
-
-                Box::pin(try_stream! {
-                    // Initialize `response` with the first result.
-                    let mut response = self.search(&params).await?;
-
-                    // Assign the response's `Pagination` value
-                    // into the `RefCell` provided in the arguments.
-                    {
-                        let mut pagination = pagination.as_ref().borrow_mut();
-                        *pagination = Some(response.pagination);
-                    }
-
-                    loop {
-                        if items.is_empty() {
-                            // Get a mutable reference to the current `Pagination`.
-                            // A `RefMut` is taken, but will not be mutated unless
-                            // we are still under the limit below.
-                            let mut pagination = pagination.as_ref().borrow_mut();
-                            // The limit that we will use to break the iterator is
-                            // going to be either the maximum results the API will
-                            // provide before terminating the stream,
-                            // or the current `total_count` provided by the last request.
-                            let limit = usize::min(
-                                limit,
-                                pagination.as_ref().unwrap().total_count as usize
-                            );
-
-                            // Check if we are at or past the limit above and break,
-                            // resulting in a `Poll::Ready(None)`.
-                            if params.index.unwrap() as usize >= limit {
-                                break;
-                            }
-
-                            // This has continued, meaning we haven't yet reached the limit.
-                            // Get the next page of search results, the index for which
-                            // has been set on the previous iteration (or before entering the loop).
-                            response = self.search(&params).await?;
-                            // Assign the response's new `Pagination` to the `RefMut`
-                            // from the arguments, this will be available by
-                            // the `pagination()` method on `PaginatedStream`.
-                            *pagination = Some(response.pagination);
-                            // Get the current `Option<Pagination>` as a reference to the inner
-                            // value and unwrap the `Option`.
-                            let pagination = (*pagination).as_ref().unwrap();
-
-                            // Check that the current `pagination`'s index matches the
-                            // one from the `SearchModsParams` to ensure it is being updated correctly.
-                            debug_assert_eq!(pagination.index, params.index.unwrap());
-                            // Check that the API is returning the number of results that it
-                            // claims to be providing.
-                            debug_assert_eq!(pagination.result_count as usize, response.data.len());
-
-                            // Assign the proper offset for the next page request.
-                            params.index = Some(params.index.unwrap() + pagination.result_count);
-                            // Take the `Vec<Mod>` items from the response and extend the
-                            // `VecDeque` that is used to yield the front-most items.
-                            items.extend(response.data.into_iter());
-                        }
-
-                        // Take the front-most item from the state's `VecDeque` and unwrap it,
-                        // because we already checked to ensure that it isn't empty.
-                        yield items.pop_front().unwrap();
-                    }
-                })
-            },
-            API_PAGINATION_RESULTS_LIMIT,
-        )
+    pub async fn search_iter<'c>(
+        &'c self,
+        params: SearchParams,
+    ) -> PaginatedStream<'_, SearchDelegate<'c>> {
+        SearchDelegate::new(self, params).into()
     }
 
     /// <https://docs.curseforge.com/#get-mod>
@@ -278,5 +205,55 @@ impl Client {
         let response = serde_json::from_slice(bytes.as_slice())?;
 
         Ok(response)
+    }
+}
+
+pub struct SearchDelegate<'c> {
+    client: &'c Client,
+    params: SearchParams,
+    pagination: Option<Pagination>,
+}
+
+impl<'c> SearchDelegate<'c> {
+    pub fn new(client: &'c Client, mut params: SearchParams) -> Self {
+        params.index = params.index.or(Some(0));
+
+        Self {
+            client,
+            params,
+            pagination: None,
+        }
+    }
+}
+
+#[async_trait]
+impl PaginationDelegate for SearchDelegate<'_> {
+    type Item = Project;
+    type Error = surf::Error;
+
+    async fn next_page(&mut self) -> Result<Vec<Self::Item>, Self::Error> {
+        let result = self.client.search(&self.params).await;
+
+        result.map(|response| {
+            self.pagination = Some(response.pagination);
+            response.data
+        })
+    }
+
+    fn offset(&self) -> usize {
+        self.params.index.unwrap() as usize
+    }
+
+    fn set_offset(&mut self, value: usize) {
+        self.params.index = Some(value as i32);
+    }
+
+    fn total_items(&self) -> Option<usize> {
+        self.pagination.as_ref().map(|pagination| {
+            usize::min(
+                API_PAGINATION_RESULTS_LIMIT,
+                pagination.total_count as usize,
+            )
+        })
     }
 }
