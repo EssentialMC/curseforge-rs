@@ -110,26 +110,6 @@ pub mod params {
     }
 }
 
-pub(crate) mod body {
-    macro_rules! request_several_body {
-        ($field:ident, $field_type:ty, $iter:expr) => {{
-            use ::serde::Serialize;
-
-            #[derive(Serialize)]
-            #[serde(rename_all = "camelCase")]
-            struct _RequestBody {
-                $field: Vec<$field_type>,
-            }
-
-            _RequestBody {
-                $field: $iter.collect(),
-            }
-        }};
-    }
-
-    pub(crate) use request_several_body;
-}
-
 pub mod response {
     use serde::{Deserialize, Serialize};
 

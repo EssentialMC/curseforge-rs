@@ -1,8 +1,6 @@
 use async_trait::async_trait;
 use awaur::paginator::{PaginatedStream, PaginationDelegate};
-use serde::Serialize;
 
-use super::request::body::request_several_body;
 use super::request::params::{CategoriesParams, GamesParams, ProjectFilesParams, SearchParams};
 use super::request::response::{DataResponse, PaginatedDataResponse};
 use super::types::{Category, File, Game, GameVersionType, GameVersions, Pagination, Project};
@@ -41,6 +39,22 @@ macro_rules! endpoint {
     (@init, $self:ident, $method:ident, $uri:literal, [$($var:ident),+]) => {
         $self.inner.$method(&format!($uri, $($var),*))
     };
+}
+
+macro_rules! several_body {
+    ($field:literal, $field_type:ty, $iter:expr) => {{
+        use ::serde::Serialize;
+
+        #[derive(Serialize)]
+        struct __RequestBody {
+            #[serde(rename = $field)]
+            __field: Vec<$field_type>,
+        }
+
+        __RequestBody {
+            __field: $iter.collect(),
+        }
+    }};
 }
 
 #[derive(Clone, Debug)]
@@ -183,7 +197,7 @@ impl Client {
     {
         let (_response, _bytes, value) = endpoint! {
             self post "mods",
-            body: Some(&request_several_body!(mod_ids, i32, project_ids.into_iter())),
+            body: Some(&several_body!("modIds", i32, project_ids.into_iter())),
             into: DataResponse<_>,
         };
 
