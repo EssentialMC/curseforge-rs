@@ -16,7 +16,6 @@ chrono = { version = "0.4", features = ["serde"] }
 surf = "2.3"
 async-trait = "0.1"
 awaur = "0.1"
-query_string = { path = "query_string" }
 
 [dev-dependencies]
 smol = "1.2"

@@ -4,7 +4,6 @@ pub use params::*;
 pub use response::*;
 
 pub mod params {
-    use query_string::QueryString;
     use serde::Serialize;
     use serde_repr::{Deserialize_repr, Serialize_repr};
     use serde_with::{DeserializeFromStr, SerializeDisplay};
@@ -13,7 +12,7 @@ pub mod params {
     use crate::official::types::ModLoaderType;
 
     /// <https://docs.curseforge.com/#get-games>
-    #[derive(Clone, Debug, Default, PartialEq, Serialize, QueryString)]
+    #[derive(Clone, Debug, Default, PartialEq, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct GamesParams {
         pub index: Option<i32>,
@@ -21,7 +20,7 @@ pub mod params {
     }
 
     /// <https://docs.curseforge.com/#get-categories>
-    #[derive(Clone, Debug, PartialEq, Serialize, QueryString)]
+    #[derive(Clone, Debug, PartialEq, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct CategoriesParams {
         pub game_id: i32,
@@ -38,7 +37,7 @@ pub mod params {
     }
 
     /// <https://docs.curseforge.com/#search-mods>
-    #[derive(Clone, Debug, PartialEq, Serialize, QueryString)]
+    #[derive(Clone, Debug, PartialEq, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct SearchParams {
         pub game_id: i32,
@@ -100,7 +99,7 @@ pub mod params {
     }
 
     /// <https://docs.curseforge.com/#get-mod-files>
-    #[derive(Clone, Debug, PartialEq, Serialize /* , QueryString */)]
+    #[derive(Clone, Debug, PartialEq, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct ProjectFilesParams {
         pub game_version: Option<String>,
