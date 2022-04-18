@@ -1,10 +1,8 @@
-#[doc(inline)]
+pub use pagination::*;
 pub use params::*;
-#[doc(inline)]
 pub use response::*;
 
-#[doc(hidden)]
-pub mod params {
+pub(crate) mod params {
     use serde::Serialize;
     use serde_repr::{Deserialize_repr, Serialize_repr};
     use serde_with::{DeserializeFromStr, SerializeDisplay};
@@ -109,10 +107,27 @@ pub mod params {
         pub index: Option<i32>,
         pub page_size: Option<i32>,
     }
+
+    macro_rules! several_body {
+        ($field:literal, $field_type:ty, $iter:expr) => {{
+            use ::serde::Serialize;
+
+            #[derive(Serialize)]
+            struct __RequestBody {
+                #[serde(rename = $field)]
+                __field: Vec<$field_type>,
+            }
+
+            __RequestBody {
+                __field: $iter.collect(),
+            }
+        }};
+    }
+
+    pub(crate) use several_body;
 }
 
-#[doc(hidden)]
-pub mod response {
+pub(crate) mod response {
     use serde::{Deserialize, Serialize};
 
     use crate::official::types::Pagination;
@@ -144,5 +159,117 @@ pub mod response {
     pub struct PaginatedDataResponse<T> {
         pub data: Vec<T>,
         pub pagination: Pagination,
+    }
+}
+
+pub(crate) mod pagination {
+    use async_trait::async_trait;
+    use awaur::paginator::PaginationDelegate;
+
+    use super::params::{ProjectFilesParams, SearchParams};
+    use crate::official::client::{Client, API_PAGINATION_RESULTS_LIMIT};
+    use crate::official::types::{File, Pagination, Project};
+
+    macro_rules! impl_pagination_delegate {
+        (
+            for $target:ty {
+                $self:ident,
+                item: $item:ty,
+                pager: ($($pager_frag:tt)*),
+            }
+        ) => {
+            #[async_trait]
+            impl PaginationDelegate for $target {
+                type Item = $item;
+                type Error = surf::Error;
+
+                async fn next_page(&mut $self) -> Result<Vec<Self::Item>, Self::Error> {
+                    let result = $($pager_frag)*.await;
+
+                    result.map(|response| {
+                        $self.pagination = Some(response.pagination);
+                        response.data
+                    })
+                }
+
+                fn offset(&self) -> usize {
+                    self.params.index.unwrap() as usize
+                }
+
+                fn set_offset(&mut self, value: usize) {
+                    self.params.index = Some(value as i32);
+                }
+
+                fn total_items(&self) -> Option<usize> {
+                    self.pagination.as_ref().map(|pagination| {
+                        usize::min(
+                            API_PAGINATION_RESULTS_LIMIT,
+                            pagination.total_count as usize,
+                        )
+                    })
+                }
+            }
+        };
+    }
+
+    /// See the documentation for [`PaginationDelegate`].
+    pub struct SearchDelegate<'c> {
+        client: &'c Client,
+        params: SearchParams,
+        pagination: Option<Pagination>,
+    }
+
+    impl<'c> SearchDelegate<'c> {
+        pub fn new(client: &'c Client, mut params: SearchParams) -> Self {
+            params.index = params.index.or(Some(0));
+
+            Self {
+                client,
+                params,
+                pagination: None,
+            }
+        }
+    }
+
+    impl_pagination_delegate! {
+        for SearchDelegate<'_> {
+            self,
+            item: Project,
+            pager: (self.client.search(&self.params)),
+        }
+    }
+
+    /// See the documentation for [`PaginationDelegate`].
+    pub struct ProjectFilesDelegate<'c> {
+        client: &'c Client,
+        project_id: i32,
+        params: ProjectFilesParams,
+        pagination: Option<Pagination>,
+    }
+
+    impl<'c> ProjectFilesDelegate<'c> {
+        pub fn new(
+            client: &'c Client,
+            project_id: i32,
+            params: Option<ProjectFilesParams>,
+        ) -> Self {
+            let mut params = params.unwrap_or_default();
+            params.index = params.index.or(Some(0));
+
+            Self {
+                client,
+                project_id,
+                params,
+                pagination: None,
+            }
+        }
+    }
+
+    impl_pagination_delegate! {
+        for ProjectFilesDelegate<'_> {
+            self,
+            item: File,
+            pager: (self.client.project_files(self.project_id, Some(&self.params))),
+        }
     }
 }

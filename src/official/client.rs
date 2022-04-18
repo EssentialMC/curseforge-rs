@@ -1,9 +1,11 @@
-use async_trait::async_trait;
-use awaur::paginator::{PaginatedStream, PaginationDelegate};
+use awaur::paginator::PaginatedStream;
 
-use super::request::params::{CategoriesParams, GamesParams, ProjectFilesParams, SearchParams};
+use super::request::pagination::{ProjectFilesDelegate, SearchDelegate};
+use super::request::params::{
+    several_body, CategoriesParams, GamesParams, ProjectFilesParams, SearchParams,
+};
 use super::request::response::{DataResponse, PaginatedDataResponse};
-use super::types::{Category, File, Game, GameVersionType, GameVersions, Pagination, Project};
+use super::types::{Category, File, Game, GameVersionType, GameVersions, Project};
 
 /// This is the official CurseForge Core API base URL.
 /// You must pass it to constructors explicitly.
@@ -39,22 +41,6 @@ macro_rules! endpoint {
     (@init, $($subj_frag:ident).+, $method:ident, $uri:literal, [$($var:ident),+]) => {
         $($subj_frag).*.$method(&format!($uri, $($var),*))
     };
-}
-
-macro_rules! several_body {
-    ($field:literal, $field_type:ty, $iter:expr) => {{
-        use ::serde::Serialize;
-
-        #[derive(Serialize)]
-        struct __RequestBody {
-            #[serde(rename = $field)]
-            __field: Vec<$field_type>,
-        }
-
-        __RequestBody {
-            __field: $iter.collect(),
-        }
-    }};
 }
 
 /// This structure wraps a [`surf::Client`] and implements methods to easily
@@ -249,102 +235,5 @@ impl Client {
         params: Option<ProjectFilesParams>,
     ) -> PaginatedStream<ProjectFilesDelegate> {
         ProjectFilesDelegate::new(self, project_id, params).into()
-    }
-}
-
-macro_rules! impl_pagination_delegate {
-    (
-        for $target:ty {
-            $self:ident,
-            item: $item:ty,
-            pager: ($($pager_frag:tt)*),
-        }
-    ) => {
-        #[async_trait]
-        impl PaginationDelegate for $target {
-            type Item = $item;
-            type Error = surf::Error;
-
-            async fn next_page(&mut $self) -> Result<Vec<Self::Item>, Self::Error> {
-                let result = $($pager_frag)*.await;
-
-                result.map(|response| {
-                    $self.pagination = Some(response.pagination);
-                    response.data
-                })
-            }
-
-            fn offset(&self) -> usize {
-                self.params.index.unwrap() as usize
-            }
-
-            fn set_offset(&mut self, value: usize) {
-                self.params.index = Some(value as i32);
-            }
-
-            fn total_items(&self) -> Option<usize> {
-                self.pagination.as_ref().map(|pagination| {
-                    usize::min(
-                        API_PAGINATION_RESULTS_LIMIT,
-                        pagination.total_count as usize,
-                    )
-                })
-            }
-        }
-    };
-}
-
-pub struct SearchDelegate<'c> {
-    client: &'c Client,
-    params: SearchParams,
-    pagination: Option<Pagination>,
-}
-
-impl<'c> SearchDelegate<'c> {
-    pub fn new(client: &'c Client, mut params: SearchParams) -> Self {
-        params.index = params.index.or(Some(0));
-
-        Self {
-            client,
-            params,
-            pagination: None,
-        }
-    }
-}
-
-impl_pagination_delegate! {
-    for SearchDelegate<'_> {
-        self,
-        item: Project,
-        pager: (self.client.search(&self.params)),
-    }
-}
-
-pub struct ProjectFilesDelegate<'c> {
-    client: &'c Client,
-    project_id: i32,
-    params: ProjectFilesParams,
-    pagination: Option<Pagination>,
-}
-
-impl<'c> ProjectFilesDelegate<'c> {
-    pub fn new(client: &'c Client, project_id: i32, params: Option<ProjectFilesParams>) -> Self {
-        let mut params = params.unwrap_or_default();
-        params.index = params.index.or(Some(0));
-
-        Self {
-            client,
-            project_id,
-            params,
-            pagination: None,
-        }
-    }
-}
-
-impl_pagination_delegate! {
-    for ProjectFilesDelegate<'_> {
-        self,
-        item: File,
-        pager: (self.client.project_files(self.project_id, Some(&self.params))),
     }
 }
