@@ -230,6 +230,61 @@ impl Client {
 
         Ok(value)
     }
+
+    /// <https://docs.curseforge.com/#get-files>
+    ///
+    /// This adheres to the limit of results defined by the
+    /// [documentation](https://docs.curseforge.com/#pagination-limits),
+    /// hardcoded by the constant [`API_PAGINATION_RESULTS_LIMIT`].
+    pub fn project_files_iter(
+        &self,
+        project_id: i32,
+        params: Option<ProjectFilesParams>,
+    ) -> PaginatedStream<ProjectFilesDelegate> {
+        ProjectFilesDelegate::new(self, project_id, params).into()
+    }
+}
+
+macro_rules! impl_pagination_delegate {
+    (
+        for $target:ty {
+            $self:ident,
+            item: $item:ty,
+            pager: ($($pager_frag:tt)*),
+        }
+    ) => {
+        #[async_trait]
+        impl PaginationDelegate for $target {
+            type Item = $item;
+            type Error = surf::Error;
+
+            async fn next_page(&mut $self) -> Result<Vec<Self::Item>, Self::Error> {
+                let result = $($pager_frag)*.await;
+
+                result.map(|response| {
+                    $self.pagination = Some(response.pagination);
+                    response.data
+                })
+            }
+
+            fn offset(&self) -> usize {
+                self.params.index.unwrap() as usize
+            }
+
+            fn set_offset(&mut self, value: usize) {
+                self.params.index = Some(value as i32);
+            }
+
+            fn total_items(&self) -> Option<usize> {
+                self.pagination.as_ref().map(|pagination| {
+                    usize::min(
+                        API_PAGINATION_RESULTS_LIMIT,
+                        pagination.total_count as usize,
+                    )
+                })
+            }
+        }
+    };
 }
 
 pub struct SearchDelegate<'c> {
@@ -250,34 +305,39 @@ impl<'c> SearchDelegate<'c> {
     }
 }
 
-#[async_trait]
-impl PaginationDelegate for SearchDelegate<'_> {
-    type Item = Project;
-    type Error = surf::Error;
-
-    async fn next_page(&mut self) -> Result<Vec<Self::Item>, Self::Error> {
-        let result = self.client.search(&self.params).await;
-
-        result.map(|response| {
-            self.pagination = Some(response.pagination);
-            response.data
-        })
+impl_pagination_delegate! {
+    for SearchDelegate<'_> {
+        self,
+        item: Project,
+        pager: (self.client.search(&self.params)),
     }
+}
 
-    fn offset(&self) -> usize {
-        self.params.index.unwrap() as usize
+pub struct ProjectFilesDelegate<'c> {
+    client: &'c Client,
+    project_id: i32,
+    params: ProjectFilesParams,
+    pagination: Option<Pagination>,
+}
+
+impl<'c> ProjectFilesDelegate<'c> {
+    pub fn new(client: &'c Client, project_id: i32, params: Option<ProjectFilesParams>) -> Self {
+        let mut params = params.unwrap_or_default();
+        params.index = params.index.or(Some(0));
+
+        Self {
+            client,
+            project_id,
+            params,
+            pagination: None,
+        }
     }
+}
 
-    fn set_offset(&mut self, value: usize) {
-        self.params.index = Some(value as i32);
-    }
-
-    fn total_items(&self) -> Option<usize> {
-        self.pagination.as_ref().map(|pagination| {
-            usize::min(
-                API_PAGINATION_RESULTS_LIMIT,
-                pagination.total_count as usize,
-            )
-        })
+impl_pagination_delegate! {
+    for ProjectFilesDelegate<'_> {
+        self,
+        item: File,
+        pager: (self.client.project_files(self.project_id, Some(&self.params))),
     }
 }

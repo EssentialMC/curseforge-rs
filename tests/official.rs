@@ -218,6 +218,33 @@ fn project_files() {
     });
 }
 
+/// Example makes requests for the first 3000 projects from a sample search and
+/// retrieves the files for each based on empty or default parameters.
+#[test]
+fn project_files_iter() {
+    use smol::pin;
+    use smol::stream::StreamExt;
+
+    smol::block_on(async {
+        let client = Client::new(API_BASE, None).unwrap();
+
+        let projects = sample_search_projects(&client, GAME_MINECRAFT, 3000).await;
+        let project_ids = projects.into_iter().map(|project| project.id);
+
+        for project in project_ids {
+            let files = client.project_files_iter(project, None);
+            pin!(files);
+
+            while let Some(result) = files.next().await {
+                match result {
+                    Ok(file) => println!("{:#?}", file),
+                    Err(error) => panic!("{:#?}", error),
+                }
+            }
+        }
+    });
+}
+
 /// Utility function to reduce duplication. Many tests require data from
 /// projects so this performs the necessary search to acquire sample data.
 async fn sample_search_projects(client: &Client, game_id: i32, amount: usize) -> Vec<Project> {
