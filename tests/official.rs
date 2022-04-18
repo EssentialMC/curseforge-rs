@@ -161,11 +161,38 @@ fn project() {
 
 #[test]
 fn projects() {
-    let client = Client::new(API_BASE, None).unwrap();
-    let mod_ids = [269024, 60089, 398022, 381583];
+    use smol::pin;
+    use smol::stream::StreamExt;
 
     smol::block_on(async {
-        let projects = client.projects(mod_ids).await;
+        let client = Client::new(API_BASE, None).unwrap();
+
+        let project_ids = {
+            let params = SearchParams::game(GAME_MINECRAFT);
+            let projects = client.search_iter(params);
+            pin!(projects);
+
+            let mut count = 0_usize;
+            let mut ids = Vec::new();
+
+            while let Some(result) = projects.next().await {
+                if count >= 3000 {
+                    break;
+                }
+
+                match &result {
+                    Ok(project) => ids.extend([project.id]),
+                    Err(error) => eprintln!("{:#?}", error),
+                }
+
+                assert!(result.is_ok());
+                count += 1;
+            }
+
+            ids
+        };
+
+        let projects = client.projects(project_ids).await;
 
         match &projects {
             Ok(projects) => println!("{:#?}", projects),
