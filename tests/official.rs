@@ -4,11 +4,11 @@ const API_BASE: &str = "https://cfproxy.fly.dev/v1/";
 const GAME_TERRARIA: i32 = 431;
 const GAME_MINECRAFT: i32 = 432;
 
+/// Example performs a request for the data for a specific game by ID.
 #[test]
 fn game() {
     smol::block_on(async {
         let client = Client::new(API_BASE, None).unwrap();
-
         let game = client.game(GAME_TERRARIA).await;
 
         match &game {
@@ -20,12 +20,13 @@ fn game() {
     });
 }
 
+/// Example performs a request for all games supported by the API.
 #[test]
 fn games() {
     smol::block_on(async {
         let client = Client::new(API_BASE, None).unwrap();
-
-        let games = client.games(&GamesParams::default()).await;
+        let params = GamesParams::default();
+        let games = client.games(&params).await;
 
         match &games {
             Ok(games) => println!("{:#?}", games),
@@ -36,11 +37,13 @@ fn games() {
     });
 }
 
+/// Example performs a request for the versions of a game by its ID. The `type`
+/// field corresponds to a "version type", for example, the version of a
+/// modloader, or a major release for a game.
 #[test]
 fn game_versions() {
     smol::block_on(async {
         let client = Client::new(API_BASE, None).unwrap();
-
         let versions = client.game_versions(GAME_MINECRAFT).await;
 
         match &versions {
@@ -52,12 +55,14 @@ fn game_versions() {
     });
 }
 
+/// Example performs a request for getting a paginated response for the "version
+/// types" (similar to categories, but for version numbers).
 #[test]
 fn game_version_types() {
     smol::block_on(async {
         let client = Client::new(API_BASE, None).unwrap();
-
-        let games = client.games(&GamesParams::default()).await;
+        let params = GamesParams::default();
+        let games = client.games(&params).await;
 
         match &games {
             Ok(games) => println!("{:#?}", games),
@@ -68,14 +73,14 @@ fn game_version_types() {
     });
 }
 
+/// Example performs a request for getting a list of project categories for the
+/// game Minecraft.
 #[test]
 fn categories() {
     smol::block_on(async {
         let client = Client::new(API_BASE, None).unwrap();
-
-        let categories = client
-            .categories(&CategoriesParams::game(GAME_MINECRAFT))
-            .await;
+        let params = CategoriesParams::game(GAME_MINECRAFT);
+        let categories = client.categories(&params).await;
 
         match &categories {
             Ok(categories) => println!("{:#?}", categories),
@@ -86,28 +91,29 @@ fn categories() {
     });
 }
 
+/// Example demonstrates searching for projects for the game Minecraft, and does
+/// not paginate over the data returned. For pagination, see `search_iter`. This
+/// demonstrates proper deserialization into the `Pagination` type.
 #[test]
 fn search() {
     smol::block_on(async {
         let client = Client::new(API_BASE, None).unwrap();
-
         let params = SearchParams::game(GAME_MINECRAFT);
+        let result = client.search(&params).await;
 
-        // params.page_size = Some(1);
-
-        let mods = client.search(&params).await;
-
-        match &mods {
-            Ok(categories) => println!("{:#?}", categories),
+        match &result {
+            Ok(response) => println!("{:#?}", response),
             Err(error) => eprintln!("{:#?}", error),
         }
 
-        assert!(mods.is_ok());
+        assert!(result.is_ok());
     });
 }
 
+/// Example asynchronously paginates over the maximum allowed search results
+/// (10,000) for the game Minecraft. This demonstrates proper deserialization
+/// into the wrapper's types as well as the proper usage of `PaginatedStream`.
 #[test]
-#[ignore]
 fn search_iter() {
     use smol::pin;
     use smol::stream::StreamExt;
@@ -115,50 +121,53 @@ fn search_iter() {
     smol::block_on(async {
         let client = Client::new(API_BASE, None).unwrap();
         let params = SearchParams::game(GAME_MINECRAFT);
+        let projects = client.search_iter(params);
+        pin!(projects);
 
-        let projects_iter = client.search_iter(params).await;
-        pin!(projects_iter);
+        let mut count = 0_usize;
 
-        let mut count = 0;
-
-        while let Some(project) = projects_iter.next().await {
-            if count >= 150 {
-                break;
-            }
-
-            match &project {
-                Ok(item) => {
-                    count += 1;
-                    println!("{:#?}", item);
+        while let Some(result) = projects.next().await {
+            match &result {
+                Ok(project) => {
+                    println!("{:#?}", project);
                 }
                 Err(error) => {
-                    eprintln!("Error encountered after {} results!\n{:#?}", count, error)
+                    eprintln!(
+                        "Stream closed unexpectedly after {} results!\n{:#?}",
+                        count, error
+                    )
                 }
             }
 
-            assert!(project.is_ok());
+            assert!(result.is_ok());
+            count += 1;
         }
     });
 }
 
+/// Example performs a request for the data from one project ID, Mouse Tweaks.
+/// To demonstrate that the wrapper's deserializing types are correct see the
+/// more robust example, `projects`.
 #[test]
 fn project() {
     const MOUSE_TWEAKS_MOD_ID: i32 = 60089;
 
     smol::block_on(async {
         let client = Client::new(API_BASE, None).unwrap();
+        let project = client.project(MOUSE_TWEAKS_MOD_ID).await;
 
-        let addon = client.project(MOUSE_TWEAKS_MOD_ID).await;
-
-        match &addon {
-            Ok(categories) => println!("{:#?}", categories),
+        match &project {
+            Ok(project) => println!("{:#?}", project),
             Err(error) => eprintln!("{:#?}", error),
         }
 
-        assert!(addon.is_ok());
+        assert!(project.is_ok());
     });
 }
 
+/// Example performs a search for the first 3000 projects for the game
+/// Minecraft, and then makes a single batched request to get data for each of
+/// those results by their project ID.
 #[test]
 fn projects() {
     use smol::pin;
