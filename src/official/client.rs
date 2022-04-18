@@ -57,6 +57,11 @@ macro_rules! several_body {
     }};
 }
 
+/// This structure wraps a [`surf::Client`] and implements methods to easily
+/// make requests to various API endpoints. The default [`Self::new`]
+/// constructor should be used if you need basic functionality, but if you just
+/// need to add extra headers or the like use [`Self::with_config`] and provide
+/// a custom [`surf::Config`].
 #[derive(Clone, Debug)]
 pub struct Client {
     inner: surf::Client,
@@ -81,8 +86,10 @@ impl Client {
         Self::with_config(base, config)
     }
 
-    /// Constructs a client with a provided [`surf::Config`].
-    /// The API base URL is still required to be passed.
+    /// Constructs a client with a provided [`surf::Config`]. The API base URL
+    /// is still required to be passed, and you must add a token manually with
+    /// the header `x-api-key` if the base URL you choose requires (not an
+    /// open proxy).
     pub fn with_config<U>(base: U, mut config: surf::Config) -> surf::Result<Self>
     where
         U: AsRef<str>,
