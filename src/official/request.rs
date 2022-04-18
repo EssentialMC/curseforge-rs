@@ -3,6 +3,7 @@ pub use params::*;
 #[doc(inline)]
 pub use response::*;
 
+#[doc(hidden)]
 pub mod params {
     use serde::Serialize;
     use serde_repr::{Deserialize_repr, Serialize_repr};
@@ -110,6 +111,7 @@ pub mod params {
     }
 }
 
+#[doc(hidden)]
 pub mod response {
     use serde::{Deserialize, Serialize};
 
