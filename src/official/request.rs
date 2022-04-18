@@ -99,7 +99,7 @@ pub mod params {
     }
 
     /// <https://docs.curseforge.com/#get-mod-files>
-    #[derive(Clone, Debug, PartialEq, Serialize)]
+    #[derive(Clone, Debug, Default, PartialEq, Serialize)]
     #[serde(rename_all = "camelCase")]
     pub struct ProjectFilesParams {
         pub game_version: Option<String>,
