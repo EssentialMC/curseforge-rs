@@ -169,7 +169,7 @@ impl Client {
     /// This adheres to the limit of results defined by the
     /// [documentation](https://docs.curseforge.com/#pagination-limits),
     /// hardcoded by the constant [`API_PAGINATION_RESULTS_LIMIT`].
-    pub async fn search_iter<'c>(
+    pub fn search_iter<'c>(
         &'c self,
         params: SearchParams,
     ) -> PaginatedStream<'_, SearchDelegate<'c>> {
