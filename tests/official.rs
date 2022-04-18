@@ -115,53 +115,33 @@ fn search() {
 /// into the wrapper's types as well as the proper usage of `PaginatedStream`.
 #[test]
 fn search_iter() {
-    use smol::pin;
-    use smol::stream::StreamExt;
-
     smol::block_on(async {
         let client = Client::new(API_BASE, None).unwrap();
-        let params = SearchParams::game(GAME_MINECRAFT);
-        let projects = client.search_iter(params);
-        pin!(projects);
+        let projects = sample_search_projects(&client, GAME_MINECRAFT, usize::MAX).await;
 
-        let mut count = 0_usize;
-
-        while let Some(result) = projects.next().await {
-            match &result {
-                Ok(project) => {
-                    println!("{:#?}", project);
-                }
-                Err(error) => {
-                    eprintln!(
-                        "Stream closed unexpectedly after {} results!\n{:#?}",
-                        count, error
-                    )
-                }
-            }
-
-            assert!(result.is_ok());
-            count += 1;
+        for project in projects {
+            println!("{:#?}", project);
         }
     });
 }
 
-/// Example performs a request for the data from one project ID, Mouse Tweaks.
-/// To demonstrate that the wrapper's deserializing types are correct see the
-/// more robust example, `projects`.
+/// Example performs a request for the data from the first 1000 projects
+/// returned from a sample search, by their ID.
 #[test]
 fn project() {
-    const MOUSE_TWEAKS_MOD_ID: i32 = 60089;
-
     smol::block_on(async {
         let client = Client::new(API_BASE, None).unwrap();
-        let project = client.project(MOUSE_TWEAKS_MOD_ID).await;
+        let projects = sample_search_projects(&client, GAME_MINECRAFT, 1000).await;
+        let project_ids = projects.into_iter().map(|project| project.id);
 
-        match &project {
-            Ok(project) => println!("{:#?}", project),
-            Err(error) => eprintln!("{:#?}", error),
+        for project in project_ids {
+            let result = client.project(project).await;
+
+            match result {
+                Ok(project) => println!("{:#?}", project),
+                Err(error) => panic!("{:#?}", error),
+            }
         }
-
-        assert!(project.is_ok());
     });
 }
 
@@ -170,44 +150,45 @@ fn project() {
 /// those results by their project ID.
 #[test]
 fn projects() {
-    use smol::pin;
-    use smol::stream::StreamExt;
-
     smol::block_on(async {
         let client = Client::new(API_BASE, None).unwrap();
 
-        let project_ids = {
-            let params = SearchParams::game(GAME_MINECRAFT);
-            let projects = client.search_iter(params);
-            pin!(projects);
+        let projects = sample_search_projects(&client, GAME_MINECRAFT, 3000).await;
+        let project_ids = projects.into_iter().map(|project| project.id);
+        let result = client.projects(project_ids).await;
 
-            let mut count = 0_usize;
-            let mut ids = Vec::new();
-
-            while let Some(result) = projects.next().await {
-                if count >= 3000 {
-                    break;
-                }
-
-                match &result {
-                    Ok(project) => ids.extend([project.id]),
-                    Err(error) => eprintln!("{:#?}", error),
-                }
-
-                assert!(result.is_ok());
-                count += 1;
-            }
-
-            ids
-        };
-
-        let projects = client.projects(project_ids).await;
-
-        match &projects {
+        match result {
             Ok(projects) => println!("{:#?}", projects),
-            Err(error) => eprintln!("{:#?}", error),
+            Err(error) => panic!("{:#?}", error),
+        }
+    });
+}
+
+/// Utility function to reduce duplication. Many tests require data from
+/// projects so this performs the necessary search to acquire sample data.
+async fn sample_search_projects(client: &Client, game_id: i32, amount: usize) -> Vec<Project> {
+    use smol::pin;
+    use smol::stream::StreamExt;
+
+    let params = SearchParams::game(game_id);
+    let search = client.search_iter(params);
+    pin!(search);
+
+    let mut count = 0_usize;
+    let mut projects = Vec::new();
+
+    while let Some(result) = search.next().await {
+        if count >= amount {
+            break;
         }
 
-        assert!(projects.is_ok())
-    });
+        match result {
+            Ok(project) => projects.extend([project]),
+            Err(error) => panic!("{:#?}", error),
+        }
+
+        count += 1;
+    }
+
+    projects
 }
