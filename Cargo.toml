@@ -1,7 +1,13 @@
 [package]
 name = "curseforge"
 version = "0.1.0"
+authors = ["Jacob Birkett <jacob@birkett.dev>"]
 edition = "2021"
+description = "A straightforward asynchronous wrapper around the CurseForge Core API. Public API is subject to change before 1.0.0."
+repository = "https://github.com/EssentialMC/curseforge-rs"
+license = "Apache-2.0"
+keywords = ["api", "rest", "async", "minecraft", "modding"]
+categories = ["api-bindings", "asynchronous", "web-programming"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
