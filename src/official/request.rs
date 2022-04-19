@@ -238,24 +238,50 @@ pub(crate) mod pagination {
     use crate::official::client::{Client, API_PAGINATION_RESULTS_LIMIT};
     use crate::official::types::{Game, Pagination, Project, ProjectFile};
 
-    macro_rules! impl_pagination_delegate {
+    macro_rules! pagination_delegate {
         (
-            for $target:ty {
-                $self:ident,
+            $name:ident {
                 item: $item:ty,
-                pager: ($($pager_frag:tt)*),
+                pager: $pager:ident,
+                $(vars: [$($var:ident: $var_type:ty),+],)?
+                params: $params:ty,
             }
         ) => {
+            /// See the documentation for [`PaginationDelegate`].
+            pub struct $name<'c> {
+                client: &'c Client,
+                $($($var: $var_type,)*)?
+                params: $params,
+                pagination: Option<Pagination>,
+            }
+
+            impl<'c> $name<'c> {
+                pub fn new(
+                    client: &'c Client,
+                    $($($var: $var_type,)*)?
+                    mut params: $params,
+                ) -> Self {
+                    params.index = params.index.or(Some(0));
+
+                    Self {
+                        client,
+                        $($($var,)*)?
+                        params,
+                        pagination: None,
+                    }
+                }
+            }
+
             #[async_trait]
-            impl PaginationDelegate for $target {
+            impl PaginationDelegate for $name<'_> {
                 type Item = $item;
                 type Error = surf::Error;
 
-                async fn next_page(&mut $self) -> Result<Vec<Self::Item>, Self::Error> {
-                    let result = $($pager_frag)*.await;
+                async fn next_page(&mut self) -> Result<Vec<Self::Item>, Self::Error> {
+                    let result = self.client.$pager($($(self.$var,)*)? &self.params).await;
 
                     result.map(|response| {
-                        $self.pagination = Some(response.pagination);
+                        self.pagination = Some(response.pagination);
                         response.data
                     })
                 }
@@ -280,91 +306,28 @@ pub(crate) mod pagination {
         };
     }
 
-    /// See the documentation for [`PaginationDelegate`].
-    pub struct GamesDelegate<'c> {
-        client: &'c Client,
-        params: GamesParams,
-        pagination: Option<Pagination>,
-    }
-
-    impl<'c> GamesDelegate<'c> {
-        pub fn new(client: &'c Client, mut params: GamesParams) -> Self {
-            params.index = params.index.or(Some(0));
-
-            Self {
-                client,
-                params,
-                pagination: None,
-            }
-        }
-    }
-
-    impl_pagination_delegate! {
-        for GamesDelegate<'_> {
-            self,
+    pagination_delegate! {
+        GamesDelegate {
             item: Game,
-            pager: (self.client.games(&self.params)),
+            pager: games,
+            params: GamesParams,
         }
     }
 
-    /// See the documentation for [`PaginationDelegate`].
-    pub struct SearchDelegate<'c> {
-        client: &'c Client,
-        params: ProjectSearchParams,
-        pagination: Option<Pagination>,
-    }
-
-    impl<'c> SearchDelegate<'c> {
-        pub fn new(client: &'c Client, mut params: ProjectSearchParams) -> Self {
-            params.index = params.index.or(Some(0));
-
-            Self {
-                client,
-                params,
-                pagination: None,
-            }
-        }
-    }
-
-    impl_pagination_delegate! {
-        for SearchDelegate<'_> {
-            self,
+    pagination_delegate! {
+        SearchDelegate {
             item: Project,
-            pager: (self.client.project_search(&self.params)),
+            pager: project_search,
+            params: ProjectSearchParams,
         }
     }
 
-    /// See the documentation for [`PaginationDelegate`].
-    pub struct ProjectFilesDelegate<'c> {
-        client: &'c Client,
-        project_id: i32,
-        params: ProjectFilesParams,
-        pagination: Option<Pagination>,
-    }
-
-    impl<'c> ProjectFilesDelegate<'c> {
-        pub fn new(
-            client: &'c Client,
-            project_id: i32,
-            params: Option<ProjectFilesParams>,
-        ) -> Self {
-            let mut params = params.unwrap_or_default();
-            params.index = params.index.or(Some(0));
-
-            Self {
-                client,
-                project_id,
-                params,
-                pagination: None,
-            }
-        }
-    }
-
-    impl_pagination_delegate! {
-        for ProjectFilesDelegate<'_> {
-            self,
+    pagination_delegate! {
+        ProjectFilesDelegate {
             item: ProjectFile,
-            pager: (self.client.project_files(self.project_id, Some(&self.params))),
+            pager: project_files,
+            vars: [project_id: i32],
+            params: ProjectFilesParams,
         }
     }
 }

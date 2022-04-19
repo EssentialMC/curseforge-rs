@@ -25,12 +25,8 @@ macro_rules! endpoint {
     ) => {{
         #[allow(unused_mut)]
         let mut request = endpoint!(@init, $($subj_frag).*, $method, $uri $(, [$($var),*])?);
-        $(if let Some(params) = $params {
-            request = request.query(params)?;
-        })?
-        $(if let Some(body) = $body {
-            request = request.body_json(body)?;
-        })?
+        $(request = request.query($params)?;)?
+        $(request = request.body_json($body)?;)?
         let request = request.build();
         let mut response = $($subj_frag).*.send(request).await?;
         let bytes = response.body_bytes().await?;
@@ -107,7 +103,7 @@ impl Client {
     pub async fn games(&self, params: &GamesParams) -> surf::Result<PaginatedDataResponse<Game>> {
         let (_response, _bytes, value) = endpoint! {
             self.inner get "games",
-            params: Some(params),
+            params: params,
             into: PaginatedDataResponse<_>,
         };
 
@@ -145,7 +141,7 @@ impl Client {
     pub async fn categories(&self, params: &CategoriesParams) -> surf::Result<Vec<Category>> {
         let (_response, _bytes, value) = endpoint! {
             self.inner get "categories",
-            params: Some(params),
+            params: params,
             into: DataResponse<_>,
         };
 
@@ -159,7 +155,7 @@ impl Client {
     ) -> surf::Result<PaginatedDataResponse<Project>> {
         let (_response, _bytes, value) = endpoint! {
             self.inner get "mods/search",
-            params: Some(params),
+            params: params,
             into: PaginatedDataResponse<_>,
         };
 
@@ -199,7 +195,7 @@ impl Client {
     {
         let (_response, _bytes, value) = endpoint! {
             self.inner post "mods",
-            body: Some(&several_body!("modIds", i32, project_ids.into_iter())),
+            body: &several_body!("modIds", i32, project_ids.into_iter()),
             into: DataResponse<_>,
         };
 
@@ -213,7 +209,7 @@ impl Client {
     ) -> surf::Result<FeaturedProjects> {
         let (_response, _bytes, value) = endpoint! {
             self.inner post "mods/featured",
-            body: Some(body),
+            body: body,
             into: DataResponse<_>,
         };
 
@@ -246,7 +242,7 @@ impl Client {
     pub async fn project_files(
         &self,
         project_id: i32,
-        params: Option<&ProjectFilesParams>,
+        params: &ProjectFilesParams,
     ) -> surf::Result<PaginatedDataResponse<ProjectFile>> {
         let (_response, _bytes, value) = endpoint! {
             self.inner get "mods/{}/files",
@@ -266,7 +262,7 @@ impl Client {
     pub fn project_files_iter(
         &self,
         project_id: i32,
-        params: Option<ProjectFilesParams>,
+        params: ProjectFilesParams,
     ) -> PaginatedStream<ProjectFilesDelegate> {
         ProjectFilesDelegate::new(self, project_id, params).into()
     }
@@ -278,7 +274,7 @@ impl Client {
     {
         let (_response, _bytes, value) = endpoint! {
             self.inner post "mods/files",
-            body: Some(&several_body!("fileIds", i32, file_ids.into_iter())),
+            body: &several_body!("fileIds", i32, file_ids.into_iter()),
             into: DataResponse<_>,
         };
 

@@ -240,12 +240,13 @@ fn project_file() {
 fn project_files() {
     smol::block_on(async {
         let client = Client::new(API_BASE, None).unwrap();
+        let params = ProjectFilesParams::default();
 
         let projects = sample_search_projects(&client, GAME_MINECRAFT, 3000).await;
         let project_ids = projects.into_iter().map(|project| project.id);
 
         for project in project_ids {
-            let result = client.project_files(project, None).await;
+            let result = client.project_files(project, &params).await;
 
             match result {
                 Ok(projects) => println!("{:#?}", projects),
@@ -264,12 +265,13 @@ fn project_files_iter() {
 
     smol::block_on(async {
         let client = Client::new(API_BASE, None).unwrap();
+        let params = ProjectFilesParams::default();
 
         let projects = sample_search_projects(&client, GAME_MINECRAFT, 3000).await;
         let project_ids = projects.into_iter().map(|project| project.id);
 
         for project in project_ids {
-            let files = client.project_files_iter(project, None);
+            let files = client.project_files_iter(project, params.clone());
             pin!(files);
 
             while let Some(result) = files.next().await {
