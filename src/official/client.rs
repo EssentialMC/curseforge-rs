@@ -3,11 +3,11 @@ use awaur::paginator::PaginatedStream;
 use super::request::pagination::{ProjectFilesDelegate, SearchDelegate};
 use super::request::params::{
     several_body, CategoriesParams, FeaturedProjectsBody, GamesParams, ProjectFilesParams,
-    SearchParams,
+    ProjectSearchParams,
 };
 use super::request::response::{DataResponse, PaginatedDataResponse};
 use super::types::{
-    Category, FeaturedProjects, File, Game, GameVersionType, GameVersions, Project,
+    Category, FeaturedProjects, Game, GameVersionType, GameVersions, Project, ProjectFile,
 };
 
 /// This is the official CurseForge Core API base URL.
@@ -148,9 +148,9 @@ impl Client {
     }
 
     /// <https://docs.curseforge.com/#search-mods>
-    pub async fn search(
+    pub async fn project_search(
         &self,
-        params: &SearchParams,
+        params: &ProjectSearchParams,
     ) -> surf::Result<PaginatedDataResponse<Project>> {
         let (_response, _bytes, value) = endpoint! {
             self.inner get "mods/search",
@@ -166,9 +166,9 @@ impl Client {
     /// This adheres to the limit of results defined by the
     /// [documentation](https://docs.curseforge.com/#pagination-limits),
     /// hardcoded by the constant [`API_PAGINATION_RESULTS_LIMIT`].
-    pub fn search_iter<'c>(
+    pub fn project_search_iter<'c>(
         &'c self,
-        params: SearchParams,
+        params: ProjectSearchParams,
     ) -> PaginatedStream<'_, SearchDelegate<'c>> {
         SearchDelegate::new(self, params).into()
     }
@@ -216,7 +216,7 @@ impl Client {
     }
 
     /// <https://docs.curseforge.com/#get-mod-file>
-    pub async fn project_file(&self, project_id: i32, file_id: i32) -> surf::Result<File> {
+    pub async fn project_file(&self, project_id: i32, file_id: i32) -> surf::Result<ProjectFile> {
         let (_response, _bytes, value) = endpoint! {
             self.inner get "mods/{}/files/{}",
             vars: [project_id, file_id],
@@ -231,7 +231,7 @@ impl Client {
         &self,
         project_id: i32,
         params: Option<&ProjectFilesParams>,
-    ) -> surf::Result<PaginatedDataResponse<File>> {
+    ) -> surf::Result<PaginatedDataResponse<ProjectFile>> {
         let (_response, _bytes, value) = endpoint! {
             self.inner get "mods/{}/files",
             vars: [project_id],

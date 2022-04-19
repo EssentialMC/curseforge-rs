@@ -98,8 +98,8 @@ fn categories() {
 fn search() {
     smol::block_on(async {
         let client = Client::new(API_BASE, None).unwrap();
-        let params = SearchParams::game(GAME_MINECRAFT);
-        let result = client.search(&params).await;
+        let params = ProjectSearchParams::game(GAME_MINECRAFT);
+        let result = client.project_search(&params).await;
 
         match &result {
             Ok(response) => println!("{:#?}", response),
@@ -268,8 +268,8 @@ async fn sample_search_projects(client: &Client, game_id: i32, amount: usize) ->
     use smol::pin;
     use smol::stream::StreamExt;
 
-    let params = SearchParams::game(game_id);
-    let search = client.search_iter(params);
+    let params = ProjectSearchParams::game(game_id);
+    let search = client.project_search_iter(params);
     pin!(search);
 
     let mut count = 0_usize;

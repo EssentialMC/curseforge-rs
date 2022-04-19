@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use super::categories::Category;
-use super::files::{File, FileIndex};
+use super::files::{FileIndex, ProjectFile};
 use super::fixes::nullable_string;
 
 /// <https://docs.curseforge.com/#tocS_ModLoaderType>
@@ -38,7 +38,7 @@ pub struct Project {
     pub logo: Option<ProjectAsset>,
     pub screenshots: Vec<ProjectAsset>,
     pub main_file_id: i32,
-    pub latest_files: Vec<File>,
+    pub latest_files: Vec<ProjectFile>,
     pub latest_files_indexes: Vec<FileIndex>,
     pub date_created: DateTime<Utc>,
     pub date_modified: DateTime<Utc>,

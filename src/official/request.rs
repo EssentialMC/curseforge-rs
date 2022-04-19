@@ -38,7 +38,7 @@ pub(crate) mod params {
     /// <https://docs.curseforge.com/#search-mods>
     #[derive(Clone, Debug, PartialEq, Serialize)]
     #[serde(rename_all = "camelCase")]
-    pub struct SearchParams {
+    pub struct ProjectSearchParams {
         pub game_id: i32,
         pub class_id: Option<i32>,
         pub category_id: Option<i32>,
@@ -53,7 +53,7 @@ pub(crate) mod params {
         pub page_size: Option<i32>,
     }
 
-    impl SearchParams {
+    impl ProjectSearchParams {
         pub fn game(game_id: i32) -> Self {
             Self {
                 game_id,
@@ -186,9 +186,9 @@ pub(crate) mod pagination {
     use async_trait::async_trait;
     use awaur::paginator::PaginationDelegate;
 
-    use super::params::{ProjectFilesParams, SearchParams};
+    use super::params::{ProjectFilesParams, ProjectSearchParams};
     use crate::official::client::{Client, API_PAGINATION_RESULTS_LIMIT};
-    use crate::official::types::{File, Pagination, Project};
+    use crate::official::types::{Pagination, Project, ProjectFile};
 
     macro_rules! impl_pagination_delegate {
         (
@@ -235,12 +235,12 @@ pub(crate) mod pagination {
     /// See the documentation for [`PaginationDelegate`].
     pub struct SearchDelegate<'c> {
         client: &'c Client,
-        params: SearchParams,
+        params: ProjectSearchParams,
         pagination: Option<Pagination>,
     }
 
     impl<'c> SearchDelegate<'c> {
-        pub fn new(client: &'c Client, mut params: SearchParams) -> Self {
+        pub fn new(client: &'c Client, mut params: ProjectSearchParams) -> Self {
             params.index = params.index.or(Some(0));
 
             Self {
@@ -255,7 +255,7 @@ pub(crate) mod pagination {
         for SearchDelegate<'_> {
             self,
             item: Project,
-            pager: (self.client.search(&self.params)),
+            pager: (self.client.project_search(&self.params)),
         }
     }
 
@@ -288,7 +288,7 @@ pub(crate) mod pagination {
     impl_pagination_delegate! {
         for ProjectFilesDelegate<'_> {
             self,
-            item: File,
+            item: ProjectFile,
             pager: (self.client.project_files(self.project_id, Some(&self.params))),
         }
     }

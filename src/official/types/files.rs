@@ -9,7 +9,7 @@ use super::projects::ModLoaderType;
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
-pub struct File {
+pub struct ProjectFile {
     pub id: i32,
     pub game_id: i32,
     #[serde(rename = "modId")]
