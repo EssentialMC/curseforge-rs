@@ -282,6 +282,29 @@ fn project_files_iter() {
     });
 }
 
+/// Example makes requests for every project's main file for the first 3000
+/// projects returned form a sample search.
+#[test]
+fn project_files_by_ids() {
+    smol::block_on(async {
+        let client = Client::new(API_BASE, None).unwrap();
+
+        let projects = sample_search_projects(&client, GAME_MINECRAFT, 3000).await;
+        let file_ids = projects.into_iter().map(|project| project.main_file_id);
+
+        let result = client.project_files_by_ids(file_ids).await;
+
+        match result {
+            Ok(files) => {
+                for file in files {
+                    println!("{:#?}", file);
+                }
+            }
+            Err(error) => panic!("{:#?}", error),
+        }
+    });
+}
+
 /// Utility function to reduce duplication. Many tests require data from
 /// projects so this performs the necessary search to acquire sample data.
 async fn sample_search_projects(client: &Client, game_id: i32, amount: usize) -> Vec<Project> {

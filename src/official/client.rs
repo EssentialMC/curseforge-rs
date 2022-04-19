@@ -236,7 +236,7 @@ impl Client {
         Ok(value.data)
     }
 
-    /// <https://docs.curseforge.com/#get-files>
+    /// <https://docs.curseforge.com/#get-mod-files>
     pub async fn project_files(
         &self,
         project_id: i32,
@@ -252,7 +252,7 @@ impl Client {
         Ok(value)
     }
 
-    /// <https://docs.curseforge.com/#get-files>
+    /// <https://docs.curseforge.com/#get-mod-files>
     ///
     /// This adheres to the limit of results defined by the
     /// [documentation](https://docs.curseforge.com/#pagination-limits),
@@ -263,5 +263,19 @@ impl Client {
         params: Option<ProjectFilesParams>,
     ) -> PaginatedStream<ProjectFilesDelegate> {
         ProjectFilesDelegate::new(self, project_id, params).into()
+    }
+
+    /// <https://docs.curseforge.com/#get-files>
+    pub async fn project_files_by_ids<I>(&self, file_ids: I) -> surf::Result<Vec<ProjectFile>>
+    where
+        I: IntoIterator<Item = i32>,
+    {
+        let (_response, _bytes, value) = endpoint! {
+            self.inner post "mods/files",
+            body: Some(&several_body!("fileIds", i32, file_ids.into_iter())),
+            into: DataResponse<_>,
+        };
+
+        Ok(value.data)
     }
 }
