@@ -109,7 +109,7 @@ pub struct ProjectAsset {
 #[serde(rename_all = "camelCase")]
 #[serde(deny_unknown_fields)]
 pub struct FeaturedProjects {
-    featured: Vec<Project>,
-    popular: Vec<Project>,
-    recently_updated: Vec<Project>,
+    pub featured: Vec<Project>,
+    pub popular: Vec<Project>,
+    pub recently_updated: Vec<Project>,
 }
