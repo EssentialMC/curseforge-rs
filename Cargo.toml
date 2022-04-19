@@ -1,6 +1,6 @@
 [package]
 name = "curseforge"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Jacob Birkett <jacob@birkett.dev>"]
 edition = "2021"
 description = "A straightforward asynchronous wrapper around the CurseForge Core API. Public API is subject to change before 1.0.0."
