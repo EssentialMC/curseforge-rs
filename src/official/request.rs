@@ -202,20 +202,20 @@ pub(crate) mod response {
 
     /// Wraps API responses which have the fields `data` and `pagination`.
     ///
-    /// | [`Client`] Methods      | API Reference            |
-    /// | ----------------------- | ------------------------ |
-    /// | [`games`]               | [Get Games Response]     |
-    /// | [`games_iter`]          | [Get Games Response]     |
-    /// | [`project_search`]      | [Search Mods Response]   |
-    /// | [`project_search_iter`] | [Search Mods Response]   |
-    /// | [`project_files`]       | [Get Mod Files Response] |
-    /// | [`project_files_iter`]  | [Get Mod Files Response] |
+    /// | [`Client`] Methods       | API Reference            |
+    /// | ------------------------ | ------------------------ |
+    /// | [`games`]                | [Get Games Response]     |
+    /// | [`games_iter`]           | [Get Games Response]     |
+    /// | [`search_projects`]      | [Search Mods Response]   |
+    /// | [`search_projects_iter`] | [Search Mods Response]   |
+    /// | [`project_files`]        | [Get Mod Files Response] |
+    /// | [`project_files_iter`]   | [Get Mod Files Response] |
     ///
     /// [`Client`]: crate::official::client::Client
     /// [`games`]: crate::official::client::Client::games
     /// [`games_iter`]: crate::official::client::Client::games_iter
-    /// [`project_search`]: crate::official::client::Client::project_search
-    /// [`project_search_iter`]: crate::official::client::Client::project_search_iter
+    /// [`search_projects`]: crate::official::client::Client::search_projects
+    /// [`search_projects_iter`]: crate::official::client::Client::search_projects_iter
     /// [`project_files`]: crate::official::client::Client::project_files
     /// [`project_files_iter`]: crate::official::client::Client::project_files_iter
     ///
@@ -315,9 +315,9 @@ pub(crate) mod pagination {
     }
 
     pagination_delegate! {
-        SearchDelegate {
+        ProjectSearchDelegate {
             item: Project,
-            pager: project_search,
+            pager: search_projects,
             params: ProjectSearchParams,
         }
     }

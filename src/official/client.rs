@@ -1,6 +1,6 @@
 use awaur::paginator::PaginatedStream;
 
-use super::request::pagination::{GamesDelegate, ProjectFilesDelegate, SearchDelegate};
+use super::request::pagination::{GamesDelegate, ProjectFilesDelegate, ProjectSearchDelegate};
 use super::request::params::{
     several_body, CategoriesParams, FeaturedProjectsBody, GamesParams, ProjectFilesParams,
     ProjectSearchParams,
@@ -149,7 +149,7 @@ impl Client {
     }
 
     /// <https://docs.curseforge.com/#search-mods>
-    pub async fn project_search(
+    pub async fn search_projects(
         &self,
         params: &ProjectSearchParams,
     ) -> surf::Result<PaginatedDataResponse<Project>> {
@@ -167,11 +167,11 @@ impl Client {
     /// This adheres to the limit of results defined by the
     /// [documentation](https://docs.curseforge.com/#pagination-limits),
     /// hardcoded by the constant [`API_PAGINATION_RESULTS_LIMIT`].
-    pub fn project_search_iter<'c>(
+    pub fn search_projects_iter<'c>(
         &'c self,
         params: ProjectSearchParams,
-    ) -> PaginatedStream<'_, SearchDelegate<'c>> {
-        SearchDelegate::new(self, params).into()
+    ) -> PaginatedStream<'_, ProjectSearchDelegate<'c>> {
+        ProjectSearchDelegate::new(self, params).into()
     }
 
     /// <https://docs.curseforge.com/#get-mod>
