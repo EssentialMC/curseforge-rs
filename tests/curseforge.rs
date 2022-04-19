@@ -324,7 +324,33 @@ fn project_file_changelog() {
             let result = client.project_file_changelog(project, file).await;
 
             match result {
-                Ok(changelog) => println!("{:#?}", changelog),
+                Ok(changelog) => println!("{}", changelog),
+                Err(error) => panic!("{:#?}", error),
+            }
+        }
+    });
+}
+
+/// Example performs a request to get file changelogs for the main file for each
+/// project returned from a sample search of the first 3000 projects.
+#[test]
+fn project_file_download_url() {
+    use std::collections::HashMap;
+
+    smol::block_on(async {
+        let client = Client::new(API_BASE, None).unwrap();
+
+        let projects = sample_search_projects(&client, GAME_MINECRAFT, 3000).await;
+        let project_files = projects
+            .into_iter()
+            .map(|project| (project.id, project.main_file_id))
+            .collect::<HashMap<_, _>>();
+
+        for (project, file) in project_files.into_iter() {
+            let result = client.project_file_download_url(project, file).await;
+
+            match result {
+                Ok(download) => println!("{}", download),
                 Err(error) => panic!("{:#?}", error),
             }
         }

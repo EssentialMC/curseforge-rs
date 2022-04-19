@@ -293,4 +293,19 @@ impl Client {
 
         Ok(value.data)
     }
+
+    /// <https://docs.curseforge.com/#get-mod-file-download-url>
+    pub async fn project_file_download_url(
+        &self,
+        project_id: i32,
+        file_id: i32,
+    ) -> surf::Result<String> {
+        let (_response, _bytes, value) = endpoint! {
+            self.inner get "mods/{}/files/{}/download-url",
+            vars: [project_id, file_id],
+            into: DataResponse<_>,
+        };
+
+        Ok(value.data)
+    }
 }
