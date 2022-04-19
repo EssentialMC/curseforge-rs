@@ -2,13 +2,15 @@ pub use pagination::*;
 pub use params::*;
 pub use response::*;
 
+use super::*;
+
 pub(crate) mod params {
     use serde::Serialize;
     use serde_repr::{Deserialize_repr, Serialize_repr};
     use serde_with::{DeserializeFromStr, SerializeDisplay};
     use strum::{Display, EnumString};
 
-    use crate::official::types::ModLoaderType;
+    use super::types::ModLoaderType;
 
     /// <https://docs.curseforge.com/#get-games>
     #[derive(Clone, Debug, Default, PartialEq, Serialize)]
@@ -149,7 +151,7 @@ pub(crate) mod params {
 pub(crate) mod response {
     use serde::{Deserialize, Serialize};
 
-    use crate::official::types::Pagination;
+    use super::types::Pagination;
 
     /// Wraps API responses which have the single field `data`.
     /// Methods that make calls to endpoints that return this will unwrap it
@@ -234,9 +236,9 @@ pub(crate) mod pagination {
     use async_trait::async_trait;
     use awaur::paginator::{PaginatedStream, PaginationDelegate};
 
+    use super::client::{Client, API_PAGINATION_RESULTS_LIMIT};
     use super::params::{GamesParams, ProjectFilesParams, ProjectSearchParams};
-    use crate::official::client::{Client, API_PAGINATION_RESULTS_LIMIT};
-    use crate::official::types::{Game, Pagination, Project, ProjectFile};
+    use super::types::{Game, Pagination, Project, ProjectFile};
 
     macro_rules! pagination_delegate {
         (
