@@ -103,3 +103,13 @@ pub struct ProjectAsset {
     pub thumbnail_url: String,
     pub url: String,
 }
+
+/// <https://docs.curseforge.com/#tocS_FeaturedModsResponse>
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+#[serde(deny_unknown_fields)]
+pub struct FeaturedProjects {
+    featured: Vec<Project>,
+    popular: Vec<Project>,
+    recently_updated: Vec<Project>,
+}

@@ -2,10 +2,13 @@ use awaur::paginator::PaginatedStream;
 
 use super::request::pagination::{ProjectFilesDelegate, SearchDelegate};
 use super::request::params::{
-    several_body, CategoriesParams, GamesParams, ProjectFilesParams, SearchParams,
+    several_body, CategoriesParams, FeaturedProjectsBody, GamesParams, ProjectFilesParams,
+    SearchParams,
 };
 use super::request::response::{DataResponse, PaginatedDataResponse};
-use super::types::{Category, File, Game, GameVersionType, GameVersions, Project};
+use super::types::{
+    Category, FeaturedProjects, File, Game, GameVersionType, GameVersions, Project,
+};
 
 /// This is the official CurseForge Core API base URL.
 /// You must pass it to constructors explicitly.
@@ -191,6 +194,20 @@ impl Client {
         let (_response, _bytes, value) = endpoint! {
             self.inner post "mods",
             body: Some(&several_body!("modIds", i32, project_ids.into_iter())),
+            into: DataResponse<_>,
+        };
+
+        Ok(value.data)
+    }
+
+    /// <https://docs.curseforge.com/#get-featured-mods>
+    pub async fn featured_projects(
+        &self,
+        body: &FeaturedProjectsBody,
+    ) -> surf::Result<FeaturedProjects> {
+        let (_response, _bytes, value) = endpoint! {
+            self.inner post "mods/featured",
+            body: Some(body),
             into: DataResponse<_>,
         };
 

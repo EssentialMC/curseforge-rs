@@ -125,6 +125,25 @@ pub(crate) mod params {
     }
 
     pub(crate) use several_body;
+
+    /// <https://docs.curseforge.com/#tocS_GetFeaturedModsRequestBody>
+    #[derive(Clone, Debug, PartialEq, Serialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct FeaturedProjectsBody {
+        pub game_id: i32,
+        pub excluded_mod_ids: Vec<i32>,
+        pub game_version_type_id: Option<i32>,
+    }
+
+    impl FeaturedProjectsBody {
+        pub fn game(game_id: i32) -> Self {
+            Self {
+                game_id,
+                excluded_mod_ids: Vec::new(),
+                game_version_type_id: None,
+            }
+        }
+    }
 }
 
 pub(crate) mod response {
@@ -142,6 +161,7 @@ pub(crate) mod response {
     /// - <https://docs.curseforge.com/#tocS_Get%20Game%20Response>
     /// - <https://docs.curseforge.com/#tocS_Get%20Mod%20Response>
     /// - <https://docs.curseforge.com/#tocS_Get%20Mods%20Response>
+    /// - <https://docs.curseforge.com/#tocS_Get%20Featured%20Mods%20Response>
     /// - <https://docs.curseforge.com/#tocS_Get%20Mod%20File%20Response>
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(deny_unknown_fields)]

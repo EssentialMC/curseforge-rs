@@ -164,6 +164,23 @@ fn projects() {
     });
 }
 
+/// Example makes a request with default parameters for getting featured
+/// projects for te game Minecraft.
+#[test]
+fn featured_projects() {
+    smol::block_on(async {
+        let client = Client::new(API_BASE, None).unwrap();
+
+        let body = FeaturedProjectsBody::game(GAME_MINECRAFT);
+        let result = client.featured_projects(&body).await;
+
+        match result {
+            Ok(featured) => println!("{:#?}", featured),
+            Err(error) => panic!("{:#?}", error),
+        }
+    });
+}
+
 /// Example performs a request to get a file by ID for each file of the first
 /// 150 projects returned from a search.
 #[test]
