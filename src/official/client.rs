@@ -14,6 +14,9 @@ use super::types::{
 /// This is the official CurseForge Core API base URL.
 /// You must pass it to constructors explicitly.
 pub const DEFAULT_API_BASE: &str = "https://api.curseforge.com/v1/";
+/// The CurseForge API has a maximum limit of 10,000 results that can be
+/// returned from any paginated request. Refer to the
+/// [documentation](https://docs.curseforge.com/#pagination-limits) for more information.
 pub const API_PAGINATION_RESULTS_LIMIT: usize = 10_000;
 
 macro_rules! endpoint {
