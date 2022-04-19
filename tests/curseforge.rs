@@ -181,6 +181,26 @@ fn featured_projects() {
     });
 }
 
+/// Example makes a request to get the project descriptions for the first 150
+/// results from a sample search.
+#[test]
+fn project_description() {
+    smol::block_on(async {
+        let client = Client::new(API_BASE, None).unwrap();
+
+        let projects = sample_search_projects(&client, GAME_MINECRAFT, 150).await;
+        let project_ids = projects.into_iter().map(|project| project.id);
+
+        for project in project_ids {
+            let result = client.project_description(project).await;
+            match result {
+                Ok(description) => println!("{}", description),
+                Err(error) => panic!("{:#?}", error),
+            }
+        }
+    });
+}
+
 /// Example performs a request to get a file by ID for each file of the first
 /// 150 projects returned from a search.
 #[test]
