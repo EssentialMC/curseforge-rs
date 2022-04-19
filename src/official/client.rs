@@ -1,6 +1,6 @@
 use awaur::paginator::PaginatedStream;
 
-use super::request::pagination::{ProjectFilesDelegate, SearchDelegate};
+use super::request::pagination::{GamesDelegate, ProjectFilesDelegate, SearchDelegate};
 use super::request::params::{
     several_body, CategoriesParams, FeaturedProjectsBody, GamesParams, ProjectFilesParams,
     ProjectSearchParams,
@@ -114,6 +114,11 @@ impl Client {
         Ok(value)
     }
 
+    /// <https://docs.curseforge.com/#get-games>
+    pub fn games_iter(&self, params: GamesParams) -> PaginatedStream<GamesDelegate> {
+        GamesDelegate::new(self, params).into()
+    }
+
     /// <https://docs.curseforge.com/#get-versions>
     pub async fn game_versions(&self, game_id: i32) -> surf::Result<Vec<GameVersions>> {
         let (_response, _bytes, value) = endpoint! {
@@ -215,6 +220,7 @@ impl Client {
         Ok(value.data)
     }
 
+    /// <https://docs.curseforge.com/#get-mod-description>
     pub async fn project_description(&self, project_id: i32) -> surf::Result<String> {
         let (_response, _bytes, value) = endpoint! {
             self.inner get "mods/{}/description",

@@ -186,9 +186,9 @@ pub(crate) mod pagination {
     use async_trait::async_trait;
     use awaur::paginator::PaginationDelegate;
 
-    use super::params::{ProjectFilesParams, ProjectSearchParams};
+    use super::params::{GamesParams, ProjectFilesParams, ProjectSearchParams};
     use crate::official::client::{Client, API_PAGINATION_RESULTS_LIMIT};
-    use crate::official::types::{Pagination, Project, ProjectFile};
+    use crate::official::types::{Game, Pagination, Project, ProjectFile};
 
     macro_rules! impl_pagination_delegate {
         (
@@ -230,6 +230,33 @@ pub(crate) mod pagination {
                 }
             }
         };
+    }
+
+    /// See the documentation for [`PaginationDelegate`].
+    pub struct GamesDelegate<'c> {
+        client: &'c Client,
+        params: GamesParams,
+        pagination: Option<Pagination>,
+    }
+
+    impl<'c> GamesDelegate<'c> {
+        pub fn new(client: &'c Client, mut params: GamesParams) -> Self {
+            params.index = params.index.or(Some(0));
+
+            Self {
+                client,
+                params,
+                pagination: None,
+            }
+        }
+    }
+
+    impl_pagination_delegate! {
+        for GamesDelegate<'_> {
+            self,
+            item: Game,
+            pager: (self.client.games(&self.params)),
+        }
     }
 
     /// See the documentation for [`PaginationDelegate`].
