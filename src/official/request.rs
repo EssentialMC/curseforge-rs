@@ -232,7 +232,7 @@ pub(crate) mod response {
 
 pub(crate) mod pagination {
     use async_trait::async_trait;
-    use awaur::paginator::PaginationDelegate;
+    use awaur::paginator::{PaginatedStream, PaginationDelegate};
 
     use super::params::{GamesParams, ProjectFilesParams, ProjectSearchParams};
     use crate::official::client::{Client, API_PAGINATION_RESULTS_LIMIT};
@@ -330,4 +330,11 @@ pub(crate) mod pagination {
             params: ProjectFilesParams,
         }
     }
+
+    /// See the documentation for [`PaginatedStream`].
+    pub type GamesStream<'c, 'f> = PaginatedStream<'f, GamesDelegate<'c>>;
+    /// See the documentation for [`PaginatedStream`].
+    pub type ProjectSearchStream<'c, 'f> = PaginatedStream<'f, ProjectSearchDelegate<'c>>;
+    /// See the documentation for [`PaginatedStream`].
+    pub type ProjectFilesStream<'c, 'f> = PaginatedStream<'f, ProjectFilesDelegate<'c>>;
 }
