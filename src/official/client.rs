@@ -83,6 +83,7 @@ impl Client {
     where
         U: AsRef<str>,
     {
+        config = config.add_header("Accept", "application/json")?;
         config = config.set_base_url(surf::Url::parse(base.as_ref())?);
 
         Ok(Self {
