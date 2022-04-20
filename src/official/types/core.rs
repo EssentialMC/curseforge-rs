@@ -11,6 +11,9 @@ pub enum CoreStatus {
     Rejected = 4,
     Approved = 5,
     Live = 6,
+    #[cfg(feature = "unknown-fields")]
+    #[serde(other)]
+    Unknown = u8::MAX,
 }
 
 /// <https://docs.curseforge.com/#tocS_CoreApiStatus>
@@ -19,6 +22,9 @@ pub enum CoreStatus {
 pub enum CoreApiStatus {
     Private = 1,
     Public = 2,
+    #[cfg(feature = "unknown-fields")]
+    #[serde(other)]
+    Unknown = u8::MAX,
 }
 
 /// <https://docs.curseforge.com/#tocS_Pagination>

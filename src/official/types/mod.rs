@@ -1,3 +1,22 @@
+//! This module contains strong types for all return values from the CurseForge
+//! API.
+//!
+//! ## Handling Unknown Fields
+//!
+//! There is an optional feature that can be enabled for this crate,
+//! `unknown-fields`, that will enable more robust deserialization for if the
+//! remote API adds fields that are not known by this crate.
+//!
+//! This will enable several conditionally-compiled features for the types
+//! exposed by this module.
+//!
+//! - All structures will have an extra field, `other_fields` with the type
+//!   [`serde_json::Value`] that will contain the remaining values that could
+//!   not be fit into the known fields of the strong type.
+//! - All enumerations will have an extra `Unknown` variant that will be used if
+//!   the API responded with an unknown variant. If the type is annotated with
+//!   `#[repr(u8)]`, the value of this variant will be `u8::MAX`.
+
 pub(crate) mod categories;
 pub(crate) mod core;
 pub(crate) mod files;

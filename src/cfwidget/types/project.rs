@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[cfg_attr(not(feature = "unknown-fields"), serde(deny_unknown_fields))]
 pub struct Project {
     pub id: u32,
     pub title: String,
@@ -25,10 +25,13 @@ pub struct Project {
     pub files: Vec<ProjectFile>,
     pub versions: HashMap<String, ProjectFile>,
     pub download: ProjectFile,
+    #[cfg(feature = "unknown-fields")]
+    #[serde(flatten)]
+    pub other_fields: serde_json::Value,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[cfg_attr(not(feature = "unknown-fields"), serde(deny_unknown_fields))]
 pub struct ProjectFile {
     pub id: u32,
     pub url: String,
@@ -42,34 +45,48 @@ pub struct ProjectFile {
     pub versions: Vec<String>,
     pub downloads: usize,
     pub uploaded_at: DateTime<Utc>,
+    #[cfg(feature = "unknown-fields")]
+    #[serde(flatten)]
+    pub other_fields: serde_json::Value,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[cfg_attr(not(feature = "unknown-fields"), serde(deny_unknown_fields))]
 pub struct ProjectDownloads {
     pub monthly: usize,
     pub total: usize,
+    #[cfg(feature = "unknown-fields")]
+    #[serde(flatten)]
+    pub other_fields: serde_json::Value,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[cfg_attr(not(feature = "unknown-fields"), serde(deny_unknown_fields))]
 pub struct ProjectUrls {
     pub curseforge: String,
     pub project: String,
+    #[cfg(feature = "unknown-fields")]
+    #[serde(flatten)]
+    pub other_fields: serde_json::Value,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
 pub enum ReleaseType {
     Release,
     Beta,
     Alpha,
+    #[cfg(feature = "unknown-fields")]
+    #[serde(other)]
+    Unknown,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(deny_unknown_fields)]
+#[cfg_attr(not(feature = "unknown-fields"), serde(deny_unknown_fields))]
 pub struct ProjectMember {
     pub title: String,
     pub username: String,
     pub id: u32,
+    #[cfg(feature = "unknown-fields")]
+    #[serde(flatten)]
+    pub other_fields: serde_json::Value,
 }

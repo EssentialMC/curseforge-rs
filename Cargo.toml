@@ -11,6 +11,9 @@ categories = ["api-bindings", "asynchronous", "web-programming"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[package.metadata.docs.rs]
+all-features = true
+
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_repr = "0.1"
@@ -25,3 +28,6 @@ awaur = "0.1"
 
 [dev-dependencies]
 smol = "1.2"
+
+[features]
+unknown-fields = []
