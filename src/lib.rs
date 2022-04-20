@@ -1,14 +1,54 @@
-//! The crate root simply re-exports all members from [`official`].
+//! # CurseForge API Wrapper for Rust
 //!
-//! Instead of keeping all modules for the official API flat in the crate root,
-//! they are in a separate module and then re-exported so that [CFWidget] can be
-//! supported in the future, albeit in its own namespace.
+//! This crate aims to provide a complete wrapper over the REST API for
+//! [CurseForge Core].
 //!
-//! For examples on how to use this API, see the [tests] directory in the
-//! repository.
+//! It also has secondary support for the [CFWidget] API.
 //!
+//! The documentation for this crate is minimal, and that is on purpose. For the
+//! most up-to-date information, refer to the documentation for the REST API
+//! that you are concerned with. Links to relevant sections are provided on
+//! every response, parameter, and body type, as well as endpoint methods. If
+//! there is anything missing, please file an issue on the repository.
+//!
+//! [CurseForge Core]: https://docs.curseforge.com/#getting-started
 //! [CFWidget]: https://www.cfwidget.com/
-//! [tests]: https://github.com/EssentialMC/curseforge-rs/tree/master/tests
+//!
+//! ## Conditional Compilation
+//!
+//! This crate has two main cargo features, `official` and `cfwidget`, that
+//! enable compilation for the modules for each API respectively. There are also
+//! two additional features, `allow-unknown-fields` and `deny-unknown-fields`
+//! that control how unexpected responses from the APIs are handled.
+//!
+//! The `official` module can be disabled with `default-features = false`, and
+//! the `cfwidget` module can be enabled with `features = ["cfwidget"]` in your
+//! `Cargo.toml`. The feature and corresponding module `cfwidget` is not enabled
+//! by default, and must be enabled explicitly in your `Cargo.toml`.
+//!
+//! **If only one module is enabled, its exports will be raised to the crate
+//! root.**
+//!
+//! You may enable either one or both modules.
+//!
+//! For information on the other two features, `allow-unknown-fields` and
+//! `deny-unknown-fields`, see the documentation on the
+//! [`crate::official::types`] module.
+//!
+//! For examples on how to use this crate, see the [tests directory] in the
+//! GitHub repository.
+//!
+//! [tests directory]: https://github.com/EssentialMC/curseforge-rs/tree/master/tests
+//!
+//! ## Generating Documentation
+//!
+//! The documentation is expected to be built with nightly, and certain features
+//! enabled for all the information to be included. The modules visible in
+//! the root will change depending on the API modules that you have enabled.
+//!
+//! ```shell
+//! $ cargo +nightly doc --features "cfwidget" --features "allow-unknown-fields"
+//! ```
 
 #![cfg_attr(doc, feature(doc_auto_cfg))]
 
