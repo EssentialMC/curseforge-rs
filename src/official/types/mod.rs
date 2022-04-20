@@ -3,19 +3,28 @@
 //!
 //! ## Handling Unknown Fields
 //!
-//! There is an optional feature that can be enabled for this crate,
-//! `unknown-fields`, that will enable more robust deserialization for if the
-//! remote API adds fields that are not known by this crate.
+//! There are two optional features that control the behavior when deserializing
+//! unknown fields, for the case when the remote API changes between releases of
+//! this crate. These are `allow-unknown-fields` and `deny-unknown-fields`.
 //!
-//! This will enable several conditionally-compiled features for the types
-//! exposed by this module.
-//!
-//! - All structures will have an extra field, `other_fields` with the type
-//!   [`serde_json::Value`] that will contain the remaining values that could
-//!   not be fit into the known fields of the strong type.
-//! - All enumerations will have an extra `Unknown` variant that will be used if
-//!   the API responded with an unknown variant. If the type is annotated with
-//!   `#[repr(u8)]`, the value of this variant will be `u8::MAX`.
+//! - The `deny-unknown-fields` feature will enable Serde's
+//!   `#[serde(deny_unknown_fields)]` annotation on all structures and is
+//!   intended primarily for tests, to ensure that all API fields and
+//!   enumeration variants are accounted for before a release.
+//! - The `allow-unknown-fields` feature is intended as a stopgap solution in
+//!   the situation where the latest version of this crate has not been updated
+//!   for the latest changes in the API, but the API is returning data that you
+//!   need access to.
+//!   - All structures will have an extra field, named `other_fields`, with the
+//!     type [`serde_json::Value`] that will contain the remaining values that
+//!     could not be fit into the known fields of the strong type.
+//!   - All enumerations will have an extra `Unknown` variant that will be used
+//!     if the API responded with an unknown variant. If the type is annotated
+//!     with `#[repr(u8)]`, the value of this variant will be [`u8::MAX`].
+//! - The default behavior when neither of these features are enabled is to
+//!   ignore any unknown fields returned from the remote API, and just
+//!   deserialize what is expected. Deserializing enumeration variants will
+//!   still fail if the API returns something unexpected.
 
 pub(crate) mod categories;
 pub(crate) mod core;

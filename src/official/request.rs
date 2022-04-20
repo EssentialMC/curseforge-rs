@@ -197,10 +197,10 @@ pub(crate) mod response {
     /// [Get Files Response]: https://docs.curseforge.com/#tocS_Get%20Files%20Response
     /// [String Response]: https://docs.curseforge.com/#tocS_String%20Response
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(not(feature = "unknown-fields"), serde(deny_unknown_fields))]
+    #[cfg_attr(feature = "deny-unknown-fields", serde(deny_unknown_fields))]
     pub struct DataResponse<T> {
         pub data: T,
-        #[cfg(feature = "unknown-fields")]
+        #[cfg(feature = "allow-unknown-fields")]
         #[serde(flatten)]
         pub other_fields: serde_json::Value,
     }
@@ -228,11 +228,11 @@ pub(crate) mod response {
     /// [Search Mods Response]: https://docs.curseforge.com/#tocS_Search%20Mods%20Response
     /// [Get Mod Files Response]: https://docs.curseforge.com/#tocS_Get%20Mod%20Files%20Response
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[cfg_attr(not(feature = "unknown-fields"), serde(deny_unknown_fields))]
+    #[cfg_attr(feature = "deny-unknown-fields", serde(deny_unknown_fields))]
     pub struct PaginatedDataResponse<T> {
         pub data: Vec<T>,
         pub pagination: Pagination,
-        #[cfg(feature = "unknown-fields")]
+        #[cfg(feature = "allow-unknown-fields")]
         #[serde(flatten)]
         pub other_fields: serde_json::Value,
     }

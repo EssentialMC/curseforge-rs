@@ -6,7 +6,7 @@ use super::fixes::nullable_datetime;
 /// <https://docs.curseforge.com/#tocS_Category>
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(not(feature = "unknown-fields"), serde(deny_unknown_fields))]
+#[cfg_attr(feature = "deny-unknown-fields", serde(deny_unknown_fields))]
 pub struct Category {
     pub id: i32,
     pub game_id: i32,
@@ -20,7 +20,7 @@ pub struct Category {
     #[serde(default)]
     pub class_id: Option<i32>,
     pub parent_category_id: Option<i32>,
-    #[cfg(feature = "unknown-fields")]
+    #[cfg(feature = "allow-unknown-fields")]
     #[serde(flatten)]
     pub other_fields: serde_json::Value,
 }

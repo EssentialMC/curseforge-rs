@@ -12,7 +12,8 @@ categories = ["api-bindings", "asynchronous", "web-programming"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [package.metadata.docs.rs]
-all-features = true
+no-default-features = true
+features = ["allow-unknown-fields"]
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
@@ -30,4 +31,5 @@ awaur = "0.1"
 smol = "1.2"
 
 [features]
-unknown-fields = []
+allow-unknown-fields = []
+deny-unknown-fields = []

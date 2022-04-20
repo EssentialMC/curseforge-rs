@@ -11,7 +11,7 @@ pub enum CoreStatus {
     Rejected = 4,
     Approved = 5,
     Live = 6,
-    #[cfg(feature = "unknown-fields")]
+    #[cfg(feature = "allow-unknown-fields")]
     #[serde(other)]
     Unknown = u8::MAX,
 }
@@ -22,7 +22,7 @@ pub enum CoreStatus {
 pub enum CoreApiStatus {
     Private = 1,
     Public = 2,
-    #[cfg(feature = "unknown-fields")]
+    #[cfg(feature = "allow-unknown-fields")]
     #[serde(other)]
     Unknown = u8::MAX,
 }

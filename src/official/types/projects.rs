@@ -15,7 +15,7 @@ pub enum ModLoaderType {
     Cauldron = 2,
     LiteLoader = 3,
     Fabric = 4,
-    #[cfg(feature = "unknown-fields")]
+    #[cfg(feature = "allow-unknown-fields")]
     #[serde(other)]
     Unknown = u8::MAX,
 }
@@ -23,7 +23,7 @@ pub enum ModLoaderType {
 /// <https://docs.curseforge.com/#tocS_Mod>
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(not(feature = "unknown-fields"), serde(deny_unknown_fields))]
+#[cfg_attr(feature = "deny-unknown-fields", serde(deny_unknown_fields))]
 pub struct Project {
     pub id: i32,
     pub game_id: i32,
@@ -50,7 +50,7 @@ pub struct Project {
     pub game_popularity_rank: i32,
     pub is_available: bool,
     pub thumbs_up_count: Option<i64>,
-    #[cfg(feature = "unknown-fields")]
+    #[cfg(feature = "allow-unknown-fields")]
     #[serde(flatten)]
     pub other_fields: serde_json::Value,
 }
@@ -58,7 +58,7 @@ pub struct Project {
 /// <https://docs.curseforge.com/#tocS_ModLinks>
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(not(feature = "unknown-fields"), serde(deny_unknown_fields))]
+#[cfg_attr(feature = "deny-unknown-fields", serde(deny_unknown_fields))]
 pub struct ProjectLinks {
     pub website_url: String,
     #[serde(deserialize_with = "nullable_string")]
@@ -67,7 +67,7 @@ pub struct ProjectLinks {
     pub issues_url: Option<String>,
     #[serde(deserialize_with = "nullable_string")]
     pub source_url: Option<String>,
-    #[cfg(feature = "unknown-fields")]
+    #[cfg(feature = "allow-unknown-fields")]
     #[serde(flatten)]
     pub other_fields: serde_json::Value,
 }
@@ -86,7 +86,7 @@ pub enum ProjectStatus {
     Abandoned = 8,
     Deleted = 9,
     UnderReview = 10,
-    #[cfg(feature = "unknown-fields")]
+    #[cfg(feature = "allow-unknown-fields")]
     #[serde(other)]
     Unknown = u8::MAX,
 }
@@ -94,12 +94,12 @@ pub enum ProjectStatus {
 /// <https://docs.curseforge.com/#tocS_ModAuthor>
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(not(feature = "unknown-fields"), serde(deny_unknown_fields))]
+#[cfg_attr(feature = "deny-unknown-fields", serde(deny_unknown_fields))]
 pub struct ProjectAuthor {
     pub id: i32,
     pub name: String,
     pub url: String,
-    #[cfg(feature = "unknown-fields")]
+    #[cfg(feature = "allow-unknown-fields")]
     #[serde(flatten)]
     pub other_fields: serde_json::Value,
 }
@@ -107,7 +107,7 @@ pub struct ProjectAuthor {
 /// <https://docs.curseforge.com/#tocS_ModAsset>
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(not(feature = "unknown-fields"), serde(deny_unknown_fields))]
+#[cfg_attr(feature = "deny-unknown-fields", serde(deny_unknown_fields))]
 pub struct ProjectAsset {
     pub id: i32,
     #[serde(rename = "modId")]
@@ -117,7 +117,7 @@ pub struct ProjectAsset {
     pub description: Option<String>,
     pub thumbnail_url: String,
     pub url: String,
-    #[cfg(feature = "unknown-fields")]
+    #[cfg(feature = "allow-unknown-fields")]
     #[serde(flatten)]
     pub other_fields: serde_json::Value,
 }
@@ -125,12 +125,12 @@ pub struct ProjectAsset {
 /// <https://docs.curseforge.com/#tocS_FeaturedModsResponse>
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(not(feature = "unknown-fields"), serde(deny_unknown_fields))]
+#[cfg_attr(feature = "deny-unknown-fields", serde(deny_unknown_fields))]
 pub struct FeaturedProjects {
     pub featured: Vec<Project>,
     pub popular: Vec<Project>,
     pub recently_updated: Vec<Project>,
-    #[cfg(feature = "unknown-fields")]
+    #[cfg(feature = "allow-unknown-fields")]
     #[serde(flatten)]
     pub other_fields: serde_json::Value,
 }

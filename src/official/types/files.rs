@@ -8,7 +8,7 @@ use super::projects::ModLoaderType;
 /// <https://docs.curseforge.com/#tocS_File>
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(not(feature = "unknown-fields"), serde(deny_unknown_fields))]
+#[cfg_attr(feature = "deny-unknown-fields", serde(deny_unknown_fields))]
 pub struct ProjectFile {
     pub id: i32,
     pub game_id: i32,
@@ -37,7 +37,7 @@ pub struct ProjectFile {
     pub server_pack_file_id: Option<i32>,
     pub file_fingerprint: i64,
     pub modules: Vec<FileModule>,
-    #[cfg(feature = "unknown-fields")]
+    #[cfg(feature = "allow-unknown-fields")]
     #[serde(flatten)]
     pub other_fields: serde_json::Value,
 }
@@ -45,7 +45,7 @@ pub struct ProjectFile {
 /// <https://docs.curseforge.com/#tocS_FileIndex>
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(not(feature = "unknown-fields"), serde(deny_unknown_fields))]
+#[cfg_attr(feature = "deny-unknown-fields", serde(deny_unknown_fields))]
 pub struct FileIndex {
     pub game_version: String,
     pub file_id: i32,
@@ -53,7 +53,7 @@ pub struct FileIndex {
     pub release_type: FileReleaseType,
     pub game_version_type_id: Option<i32>,
     pub mod_loader: Option<ModLoaderType>,
-    #[cfg(feature = "unknown-fields")]
+    #[cfg(feature = "allow-unknown-fields")]
     #[serde(flatten)]
     pub other_fields: serde_json::Value,
 }
@@ -65,7 +65,7 @@ pub enum FileReleaseType {
     Release = 1,
     Beta = 2,
     Alpha = 3,
-    #[cfg(feature = "unknown-fields")]
+    #[cfg(feature = "allow-unknown-fields")]
     #[serde(other)]
     Unknown = u8::MAX,
 }
@@ -89,7 +89,7 @@ pub enum FileStatus {
     Baking = 13,
     AwaitingPublishing = 14,
     FailedPublishing = 15,
-    #[cfg(feature = "unknown-fields")]
+    #[cfg(feature = "allow-unknown-fields")]
     #[serde(other)]
     Unknown = u8::MAX,
 }
@@ -97,11 +97,11 @@ pub enum FileStatus {
 /// <https://docs.curseforge.com/#tocS_FileHash>
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(not(feature = "unknown-fields"), serde(deny_unknown_fields))]
+#[cfg_attr(feature = "deny-unknown-fields", serde(deny_unknown_fields))]
 pub struct FileHash {
     pub value: String,
     pub algo: HashAlgorithm,
-    #[cfg(feature = "unknown-fields")]
+    #[cfg(feature = "allow-unknown-fields")]
     #[serde(flatten)]
     pub other_fields: serde_json::Value,
 }
@@ -112,7 +112,7 @@ pub struct FileHash {
 pub enum HashAlgorithm {
     Sha1 = 1,
     Md5 = 2,
-    #[cfg(feature = "unknown-fields")]
+    #[cfg(feature = "allow-unknown-fields")]
     #[serde(other)]
     Unknown = u8::MAX,
 }
@@ -120,7 +120,7 @@ pub enum HashAlgorithm {
 /// <https://docs.curseforge.com/#tocS_SortableGameVersion>
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(not(feature = "unknown-fields"), serde(deny_unknown_fields))]
+#[cfg_attr(feature = "deny-unknown-fields", serde(deny_unknown_fields))]
 pub struct SortableGameVersion {
     pub game_version_name: String,
     #[serde(deserialize_with = "nullable_string")]
@@ -129,7 +129,7 @@ pub struct SortableGameVersion {
     pub game_version: Option<String>,
     pub game_version_release_date: DateTime<Utc>,
     pub game_version_type_id: Option<i32>,
-    #[cfg(feature = "unknown-fields")]
+    #[cfg(feature = "allow-unknown-fields")]
     #[serde(flatten)]
     pub other_fields: serde_json::Value,
 }
@@ -137,12 +137,12 @@ pub struct SortableGameVersion {
 /// <https://docs.curseforge.com/#tocS_FileDependency>
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(not(feature = "unknown-fields"), serde(deny_unknown_fields))]
+#[cfg_attr(feature = "deny-unknown-fields", serde(deny_unknown_fields))]
 pub struct FileDependency {
     #[serde(rename = "modId")]
     pub project_id: i32,
     pub relation_type: FileRelationType,
-    #[cfg(feature = "unknown-fields")]
+    #[cfg(feature = "allow-unknown-fields")]
     #[serde(flatten)]
     pub other_fields: serde_json::Value,
 }
@@ -157,7 +157,7 @@ pub enum FileRelationType {
     Tool = 4,
     Incompatible = 5,
     Include = 6,
-    #[cfg(feature = "unknown-fields")]
+    #[cfg(feature = "allow-unknown-fields")]
     #[serde(other)]
     Unknown = u8::MAX,
 }
@@ -165,11 +165,11 @@ pub enum FileRelationType {
 /// <https://docs.curseforge.com/#tocS_FileModule>
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[cfg_attr(not(feature = "unknown-fields"), serde(deny_unknown_fields))]
+#[cfg_attr(feature = "deny-unknown-fields", serde(deny_unknown_fields))]
 pub struct FileModule {
     name: String,
     fingerprint: i64,
-    #[cfg(feature = "unknown-fields")]
+    #[cfg(feature = "allow-unknown-fields")]
     #[serde(flatten)]
     pub other_fields: serde_json::Value,
 }
