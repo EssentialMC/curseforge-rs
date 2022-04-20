@@ -1,3 +1,15 @@
+//! The crate root simply re-exports all members from [`official`].
+//!
+//! Instead of keeping all modules for the official API flat in the crate root,
+//! they are in a separate module and then re-exported so that [CFWidget] can be
+//! supported in the future, albeit in its own namespace.
+//!
+//! For examples on how to use this API, see the [tests] directory in the
+//! repository.
+//!
+//! [CFWidget]: https://www.cfwidget.com/
+//! [tests]: https://github.com/EssentialMC/curseforge-rs/tree/master/tests
+
 #![cfg_attr(doc, feature(doc_auto_cfg))]
 
 #[cfg(all(feature = "allow-unknown-fields", feature = "deny-unknown-fields"))]

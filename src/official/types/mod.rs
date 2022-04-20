@@ -1,5 +1,4 @@
-//! This module contains strong types for all return values from the CurseForge
-//! API.
+//! Contains strong types for all return values from the CurseForge API.
 //!
 //! ## Handling Unknown Fields
 //!

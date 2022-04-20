@@ -1,3 +1,6 @@
+//! Contains the [`Client`] structure whose methods are used to make
+//! requests to the remote API.
+
 use super::request::pagination::{
     GamesDelegate, GamesStream, ProjectFilesDelegate, ProjectFilesStream, ProjectSearchDelegate,
     ProjectSearchStream,
