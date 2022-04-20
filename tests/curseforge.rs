@@ -13,10 +13,8 @@ fn game() {
 
         match &game {
             Ok(game) => println!("{:#?}", game),
-            Err(error) => eprintln!("{:#?}", error),
+            Err(error) => panic!("{:#?}", error),
         }
-
-        assert!(game.is_ok());
     });
 }
 
@@ -30,10 +28,8 @@ fn games() {
 
         match &games {
             Ok(games) => println!("{:#?}", games),
-            Err(error) => eprintln!("{:#?}", error),
+            Err(error) => panic!("{:#?}", error),
         }
-
-        assert!(games.is_ok());
     });
 }
 
@@ -48,10 +44,8 @@ fn game_versions() {
 
         match &versions {
             Ok(games) => println!("{:#?}", games),
-            Err(error) => eprintln!("{:#?}", error),
+            Err(error) => panic!("{:#?}", error),
         }
-
-        assert!(versions.is_ok());
     });
 }
 
@@ -66,10 +60,8 @@ fn game_version_types() {
 
         match &games {
             Ok(games) => println!("{:#?}", games),
-            Err(error) => eprintln!("{:#?}", error),
+            Err(error) => panic!("{:#?}", error),
         }
-
-        assert!(games.is_ok());
     });
 }
 
@@ -84,10 +76,8 @@ fn categories() {
 
         match &categories {
             Ok(categories) => println!("{:#?}", categories),
-            Err(error) => eprintln!("{:#?}", error),
+            Err(error) => panic!("{:#?}", error),
         }
-
-        assert!(categories.is_ok());
     });
 }
 
@@ -103,10 +93,8 @@ fn search() {
 
         match &result {
             Ok(response) => println!("{:#?}", response),
-            Err(error) => eprintln!("{:#?}", error),
+            Err(error) => panic!("{:#?}", error),
         }
-
-        assert!(result.is_ok());
     });
 }
 
