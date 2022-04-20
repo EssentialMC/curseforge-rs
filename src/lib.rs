@@ -17,9 +17,17 @@ compile_error!(
     r#"features "allow-unknown-fields" and "deny-unknown-fields" are mutually exclusive"#
 );
 
-#[doc(hidden)]
+#[cfg(feature = "cfwidget")]
+#[cfg_attr(not(feature = "official"), doc(hidden))]
 pub mod cfwidget;
+#[cfg(feature = "official")]
+#[cfg_attr(not(feature = "cfwidget"), doc(hidden))]
 pub mod official;
 
+#[cfg(all(feature = "official", not(feature = "cfwidget")))]
 #[doc(inline)]
 pub use official::*;
+
+#[cfg(all(feature = "cfwidget", not(feature = "official")))]
+#[doc(inline)]
+pub use cfwidget::*;
