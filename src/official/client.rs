@@ -242,6 +242,13 @@ impl Client {
         Ok(value.data)
     }
 
+    /// Alternative method to [`Self::project_file`] that eliminates the need
+    /// for a `project_id`. This uses [`Self::project_files_by_ids`] and
+    /// returns the only item.
+    pub async fn project_file_by_id(&self, file_id: i32) -> surf::Result<ProjectFile> {
+        Ok(self.project_files_by_ids([file_id]).await?.pop().unwrap())
+    }
+
     /// <https://docs.curseforge.com/#get-mod-files>
     pub async fn project_files(
         &self,

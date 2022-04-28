@@ -222,6 +222,29 @@ fn project_file() {
     });
 }
 
+#[test]
+fn project_file_by_id() {
+    smol::block_on(async {
+        let client = Client::new(API_BASE, None).unwrap();
+
+        let projects = sample_search_projects(&client, GAME_MINECRAFT, 150).await;
+        let project_files = projects
+            .into_iter()
+            .map(|project| project.latest_files.into_iter().map(|file| file.id))
+            .flatten()
+            .collect::<Vec<_>>();
+
+        for file in project_files.into_iter() {
+            let result = client.project_file_by_id(file).await;
+
+            match result {
+                Ok(file) => println!("{:#?}", file),
+                Err(error) => panic!("{:#?}", error),
+            }
+        }
+    });
+}
+
 /// Example makes requests for the first 3000 projects from a sample search and
 /// retrieves the files for each based on empty or default parameters.
 #[test]
