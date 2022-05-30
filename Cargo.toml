@@ -23,7 +23,11 @@ serde_json = "1.0"
 #serde_path_to_error = "0.1"
 strum = { version = "0.24", features = ["derive"] }
 chrono = { version = "0.4", features = ["serde"] }
-surf = "2.3"
+isahc = "1.7"
+url = "2.2"
+serde_qs = "0.9"
+thiserror = "1"
+futures-lite = "1.12"
 async-trait = "0.1"
 awaur = "0.1"
 

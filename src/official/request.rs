@@ -250,6 +250,7 @@ pub(crate) mod pagination {
     use super::client::{Client, API_PAGINATION_RESULTS_LIMIT};
     use super::params::{GamesParams, ProjectFilesParams, ProjectSearchParams};
     use super::types::{Game, Pagination, Project, ProjectFile};
+    use crate::Error;
 
     macro_rules! pagination_delegate {
         (
@@ -288,7 +289,7 @@ pub(crate) mod pagination {
             #[async_trait]
             impl PaginationDelegate for $name<'_> {
                 type Item = $item;
-                type Error = surf::Error;
+                type Error = Error;
 
                 async fn next_page(&mut self) -> Result<Vec<Self::Item>, Self::Error> {
                     let result = self.client.$pager($($(self.$var,)*)? &self.params).await;

@@ -71,3 +71,17 @@ pub use official::*;
 #[cfg(all(feature = "cfwidget", not(feature = "official")))]
 #[doc(inline)]
 pub use cfwidget::*;
+
+#[derive(Debug, thiserror::Error)]
+pub enum Error {
+    #[error("there was an error constructing or receiving a request\n{0}")]
+    Request(#[from] isahc::Error),
+    #[error("there was an error constructing the request\n{0}")]
+    Http(#[from] isahc::http::Error),
+    #[error("there was an error deserializing the response body\n{0}")]
+    Deserialize(#[from] serde_json::Error),
+    #[error("the string provided failed to parse as a URL\n{0}")]
+    ParseBaseUrl(#[from] url::ParseError),
+    #[error("the URL provided cannot be a base")]
+    BadBaseUrl,
+}
