@@ -1,6 +1,14 @@
 //! Contains the [`Client`] structure whose methods are used to make
 //! requests to the remote API.
 
+use crate::official::request::{
+    CategoriesParams, FeaturedProjectsBody, GamesDelegate, GamesParams, GamesStream,
+    PaginatedDataResponse, ProjectFilesDelegate, ProjectFilesParams, ProjectFilesStream,
+    ProjectSearchDelegate, ProjectSearchParams, ProjectSearchStream,
+};
+use crate::official::types::{
+    Category, FeaturedProjects, Game, GameVersionType, GameVersions, Project, ProjectFile,
+};
 use crate::Error;
 
 /// This is the official CurseForge Core API base URL.
@@ -11,11 +19,8 @@ pub const DEFAULT_API_BASE: &str = "https://api.curseforge.com/v1/";
 /// [documentation](https://docs.curseforge.com/#pagination-limits) for more information.
 pub const API_PAGINATION_RESULTS_LIMIT: usize = 10_000;
 
-/// This structure wraps a [`surf::Client`] and implements methods to easily
-/// make requests to various API endpoints. The default [`Self::new`]
-/// constructor should be used if you need basic functionality, but if you just
-/// need to add extra headers or the like use [`Self::with_config`] and provide
-/// a custom [`surf::Config`].
+/// This structure wraps an [`isahc::HttpClient`] and implements methods to
+/// easily make requests to various API endpoints.
 #[derive(Clone, Debug)]
 pub struct Client {
     inner: isahc::HttpClient,
@@ -32,6 +37,7 @@ impl Client {
     {
         let mut builder = isahc::HttpClient::builder();
 
+        builder = builder.default_header("content-type", "application/json");
         builder = builder.default_header("accept", "application/json");
 
         if let Some(token) = token {
@@ -50,225 +56,136 @@ impl Client {
         })
     }
 
-    // /// <https://docs.curseforge.com/#get-game>
-    // pub async fn game(&self, game_id: i32) -> Result<Game, Error> {
-    //     game(&self.inner, &self.base, game_id).await
-    // }
-    //
-    // /// <https://docs.curseforge.com/#get-games>
-    // pub async fn games(&self, params: &GamesParams) ->
-    // Result<PaginatedDataResponse<Game>, Error> {     games(&self.inner,
-    // &self.base, params).await }
-    //
-    // /// <https://docs.curseforge.com/#get-games>
-    // pub fn games_iter(&self, params: GamesParams) -> GamesStream {
-    //     GamesDelegate::new(&self.inner, &self.base, params).into()
-    // }
+    /// [`e::game`]
+    pub async fn game(&self, game_id: i32) -> Result<Game, Error> {
+        e::game(&self.inner, &self.base, game_id).await
+    }
 
-    // /// <https://docs.curseforge.com/#get-versions>
-    // pub async fn game_versions(&self, game_id: i32) -> Result<Vec<GameVersions>,
-    // Error> {     let (_response, _bytes, value) = endpoint! {
-    //         self GET "games/{}/versions",
-    //         vars: [game_id],
-    //         into: DataResponse<_>,
-    //     };
-    //
-    //     Ok(value.data)
-    // }
-    //
-    // /// <https://docs.curseforge.com/#get-version-types>
-    // pub async fn game_version_types(&self, game_id: i32) ->
-    // Result<Vec<GameVersionType>, Error> {     let (_response, _bytes, value)
-    // = endpoint! {         self GET "games/{}/version-types",
-    //         vars: [game_id],
-    //         into: DataResponse<_>,
-    //     };
-    //
-    //     Ok(value.data)
-    // }
-    //
-    // /// <https://docs.curseforge.com/#get-categories>
-    // pub async fn categories(&self, params: &CategoriesParams) ->
-    // Result<Vec<Category>, Error> {     let (_response, _bytes, value) =
-    // endpoint! {         self GET "categories",
-    //         params: params,
-    //         into: DataResponse<_>,
-    //     };
-    //
-    //     Ok(value.data)
-    // }
-    //
-    // /// <https://docs.curseforge.com/#search-mods>
-    // pub async fn search_projects(
-    //     &self,
-    //     params: &ProjectSearchParams,
-    // ) -> Result<PaginatedDataResponse<Project>, Error> {
-    //     let (_response, _bytes, value) = endpoint! {
-    //         self GET "mods/search",
-    //         params: params,
-    //         into: PaginatedDataResponse<_>,
-    //     };
-    //
-    //     Ok(value)
-    // }
-    //
-    // /// <https://docs.curseforge.com/#search-mods>
-    // ///
-    // /// This adheres to the limit of results defined by the
-    // /// [documentation](https://docs.curseforge.com/#pagination-limits),
-    // /// hardcoded by the constant [`API_PAGINATION_RESULTS_LIMIT`].
-    // pub fn search_projects_iter(&self, params: ProjectSearchParams) ->
-    // ProjectSearchStream {     ProjectSearchDelegate::new(self, params).into()
-    // }
-    //
-    // /// <https://docs.curseforge.com/#get-mod>
-    // ///
-    // /// Renamed from `mod` to `project` because the former is a keyword, and the
-    // /// API considers every "project" to be a "mod".
-    // pub async fn project(&self, project_id: i32) -> Result<Project, Error> {
-    //     let (_response, _bytes, value) = endpoint! {
-    //         self GET "mods/{}",
-    //         vars: [project_id],
-    //         into: DataResponse<_>,
-    //     };
-    //
-    //     Ok(value.data)
-    // }
-    //
-    // /// <https://docs.curseforge.com/#get-mods>
-    // pub async fn projects<I>(&self, project_ids: I) -> Result<Vec<Project>,
-    // Error> where
-    //     I: IntoIterator<Item = i32>,
-    // {
-    //     let (_response, _bytes, value) = endpoint! {
-    //         self POST "mods",
-    //         body: &several_body!("modIds", i32, project_ids.into_iter()),
-    //         into: DataResponse<_>,
-    //     };
-    //
-    //     Ok(value.data)
-    // }
-    //
-    // /// <https://docs.curseforge.com/#get-featured-mods>
-    // pub async fn featured_projects(
-    //     &self,
-    //     body: &FeaturedProjectsBody,
-    // ) -> Result<FeaturedProjects, Error> {
-    //     let (_response, _bytes, value) = endpoint! {
-    //         self POST "mods/featured",
-    //         body: body,
-    //         into: DataResponse<_>,
-    //     };
-    //
-    //     Ok(value.data)
-    // }
-    //
-    // /// <https://docs.curseforge.com/#get-mod-description>
-    // pub async fn project_description(&self, project_id: i32) -> Result<String,
-    // Error> {     let (_response, _bytes, value) = endpoint! {
-    //         self GET "mods/{}/description",
-    //         vars: [project_id],
-    //         into: DataResponse<_>,
-    //     };
-    //
-    //     Ok(value.data)
-    // }
-    //
-    // /// <https://docs.curseforge.com/#get-mod-file>
-    // pub async fn project_file(&self, project_id: i32, file_id: i32) ->
-    // Result<ProjectFile, Error> {     let (_response, _bytes, value) =
-    // endpoint! {         self GET "mods/{}/files/{}",
-    //         vars: [project_id, file_id],
-    //         into: DataResponse<_>,
-    //     };
-    //
-    //     Ok(value.data)
-    // }
-    //
-    // /// Alternative method to [`Self::project_file`] that eliminates the need
-    // /// for a `project_id`. This uses [`Self::project_files_by_ids`] and
-    // /// returns the only item.
-    // pub async fn project_file_by_id(&self, file_id: i32) -> Result<ProjectFile,
-    // Error> {     Ok(self.project_files_by_ids([file_id]).await?.pop().
-    // unwrap()) }
-    //
-    // /// <https://docs.curseforge.com/#get-mod-files>
-    // pub async fn project_files(
-    //     &self,
-    //     project_id: i32,
-    //     params: &ProjectFilesParams,
-    // ) -> Result<PaginatedDataResponse<ProjectFile>, Error> {
-    //     let (_response, _bytes, value) = endpoint! {
-    //         self GET "mods/{}/files",
-    //         vars: [project_id],
-    //         params: params,
-    //         into: PaginatedDataResponse<_>,
-    //     };
-    //
-    //     Ok(value)
-    // }
-    //
-    // /// <https://docs.curseforge.com/#get-mod-files>
-    // ///
-    // /// This adheres to the limit of results defined by the
-    // /// [documentation](https://docs.curseforge.com/#pagination-limits),
-    // /// hardcoded by the constant [`API_PAGINATION_RESULTS_LIMIT`].
-    // pub fn project_files_iter(
-    //     &self,
-    //     project_id: i32,
-    //     params: ProjectFilesParams,
-    // ) -> ProjectFilesStream {
-    //     ProjectFilesDelegate::new(self, project_id, params).into()
-    // }
-    //
-    // /// <https://docs.curseforge.com/#get-files>
-    // pub async fn project_files_by_ids<I>(&self, file_ids: I) ->
-    // Result<Vec<ProjectFile>, Error> where
-    //     I: IntoIterator<Item = i32>,
-    // {
-    //     let (_response, _bytes, value) = endpoint! {
-    //         self POST "mods/files",
-    //         body: &several_body!("fileIds", i32, file_ids.into_iter()),
-    //         into: DataResponse<_>,
-    //     };
-    //
-    //     Ok(value.data)
-    // }
-    //
-    // /// <https://docs.curseforge.com/#get-mod-file-changelog>
-    // pub async fn project_file_changelog(
-    //     &self,
-    //     project_id: i32,
-    //     file_id: i32,
-    // ) -> Result<String, Error> {
-    //     let (_response, _bytes, value) = endpoint! {
-    //         self GET "mods/{}/files/{}/changelog",
-    //         vars: [project_id, file_id],
-    //         into: DataResponse<_>,
-    //     };
-    //
-    //     Ok(value.data)
-    // }
-    //
-    // /// <https://docs.curseforge.com/#get-mod-file-download-url>
-    // pub async fn project_file_download_url(
-    //     &self,
-    //     project_id: i32,
-    //     file_id: i32,
-    // ) -> Result<String, Error> {
-    //     let (_response, _bytes, value) = endpoint! {
-    //         self GET "mods/{}/files/{}/download-url",
-    //         vars: [project_id, file_id],
-    //         into: DataResponse<_>,
-    //     };
-    //
-    //     Ok(value.data)
-    // }
+    /// [`e::games`]
+    pub async fn games(&self, params: &GamesParams) -> Result<PaginatedDataResponse<Game>, Error> {
+        e::games(&self.inner, &self.base, params).await
+    }
+
+    /// [`e::games_iter`]
+    pub fn games_iter(&self, params: GamesParams) -> GamesStream {
+        GamesDelegate::new(&self.inner, &self.base, params).into()
+    }
+
+    /// [`e::game_versions`]
+    pub async fn game_versions(&self, game_id: i32) -> Result<Vec<GameVersions>, Error> {
+        e::game_versions(&self.inner, &self.base, game_id).await
+    }
+
+    /// [`e::game_version_types`]
+    pub async fn game_version_types(&self, game_id: i32) -> Result<Vec<GameVersionType>, Error> {
+        e::game_version_types(&self.inner, &self.base, game_id).await
+    }
+
+    /// [`e::categories`]
+    pub async fn categories(&self, params: &CategoriesParams) -> Result<Vec<Category>, Error> {
+        e::categories(&self.inner, &self.base, params).await
+    }
+
+    /// [`e::search_projects`]
+    pub async fn search_projects(
+        &self,
+        params: &ProjectSearchParams,
+    ) -> Result<PaginatedDataResponse<Project>, Error> {
+        e::search_projects(&self.inner, &self.base, params).await
+    }
+
+    /// [`e::search_projects_iter`]
+    pub fn search_projects_iter(&self, params: ProjectSearchParams) -> ProjectSearchStream {
+        ProjectSearchDelegate::new(&self.inner, &self.base, params).into()
+    }
+
+    /// [`e::project`]
+    pub async fn project(&self, project_id: i32) -> Result<Project, Error> {
+        e::project(&self.inner, &self.base, project_id).await
+    }
+
+    /// [`e::projects`]
+    pub async fn projects<I>(&self, project_ids: I) -> Result<Vec<Project>, Error>
+    where
+        I: IntoIterator<Item = i32>,
+    {
+        e::projects(&self.inner, &self.base, project_ids).await
+    }
+
+    /// [`e::featured_projects`]
+    pub async fn featured_projects(
+        &self,
+        body: &FeaturedProjectsBody,
+    ) -> Result<FeaturedProjects, Error> {
+        e::featured_projects(&self.inner, &self.base, body).await
+    }
+
+    /// [`e::project_description`]
+    pub async fn project_description(&self, project_id: i32) -> Result<String, Error> {
+        e::project_description(&self.inner, &self.base, project_id).await
+    }
+
+    /// [`e::project_file`]
+    pub async fn project_file(&self, project_id: i32, file_id: i32) -> Result<ProjectFile, Error> {
+        e::project_file(&self.inner, &self.base, project_id, file_id).await
+    }
+
+    /// [`e::project_file_by_id`]
+    pub async fn project_file_by_id(&self, file_id: i32) -> Result<ProjectFile, Error> {
+        Ok(e::project_files_by_ids(&self.inner, &self.base, [file_id])
+            .await?
+            .pop()
+            .unwrap())
+    }
+
+    /// [`e::project_files`]
+    pub async fn project_files(
+        &self,
+        project_id: i32,
+        params: &ProjectFilesParams,
+    ) -> Result<PaginatedDataResponse<ProjectFile>, Error> {
+        e::project_files(&self.inner, &self.base, project_id, params).await
+    }
+
+    /// [`e::project_files_iter`]
+    pub fn project_files_iter(
+        &self,
+        project_id: i32,
+        params: ProjectFilesParams,
+    ) -> ProjectFilesStream {
+        ProjectFilesDelegate::new(&self.inner, &self.base, project_id, params).into()
+    }
+
+    /// [`e::project_files_by_ids`]
+    pub async fn project_files_by_ids<I>(&self, file_ids: I) -> Result<Vec<ProjectFile>, Error>
+    where
+        I: IntoIterator<Item = i32>,
+    {
+        e::project_files_by_ids(&self.inner, &self.base, file_ids).await
+    }
+
+    /// [`e::project_file_changelog`]
+    pub async fn project_file_changelog(
+        &self,
+        project_id: i32,
+        file_id: i32,
+    ) -> Result<String, Error> {
+        e::project_file_changelog(&self.inner, &self.base, project_id, file_id).await
+    }
+
+    /// [`e::project_file_download_url`]
+    pub async fn project_file_download_url(
+        &self,
+        project_id: i32,
+        file_id: i32,
+    ) -> Result<String, Error> {
+        e::project_file_download_url(&self.inner, &self.base, project_id, file_id).await
+    }
 }
 
 pub mod e {
-    //! Contains the [`Client`] structure whose methods are used to make
-    //! requests to the remote API.
+    //! Contains methods that take an [`isahc::HttpClient`] and make a request
+    //! to a CurseForge endpoint.
 
     use crate::official::request::pagination::{
         GamesDelegate, GamesStream, ProjectFilesDelegate, ProjectFilesStream,
@@ -544,8 +461,8 @@ pub mod e {
         Ok(value.data)
     }
 
-    /// Alternative method to [`Self::project_file`] that eliminates the need
-    /// for a `project_id`. This uses [`Self::project_files_by_ids`] and
+    /// Alternative method to [`project_file`] that eliminates the need
+    /// for a `project_id`. This uses [`project_files_by_ids`] and
     /// returns the only item.
     pub async fn project_file_by_id(
         client: &isahc::HttpClient,

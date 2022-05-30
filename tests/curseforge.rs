@@ -4,6 +4,7 @@ use once_cell::sync::Lazy;
 static CLIENT: Lazy<(isahc::HttpClient, url::Url)> = Lazy::new(|| {
     (
         isahc::HttpClient::builder()
+            .default_header("content-type", "application/json")
             .default_header("accept", "application/json")
             .build()
             .unwrap(),
