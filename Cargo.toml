@@ -33,6 +33,7 @@ awaur = "0.1"
 
 [dev-dependencies]
 smol = "1.2"
+once_cell = "1.12"
 
 [features]
 default = ["official"]

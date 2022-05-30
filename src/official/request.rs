@@ -247,7 +247,8 @@ pub(crate) mod pagination {
     use async_trait::async_trait;
     use awaur::paginator::{PaginatedStream, PaginationDelegate};
 
-    use super::client::{Client, API_PAGINATION_RESULTS_LIMIT};
+    use super::client::e::*;
+    use super::client::API_PAGINATION_RESULTS_LIMIT;
     use super::params::{GamesParams, ProjectFilesParams, ProjectSearchParams};
     use super::types::{Game, Pagination, Project, ProjectFile};
     use crate::Error;
@@ -262,16 +263,18 @@ pub(crate) mod pagination {
             }
         ) => {
             /// See the documentation for [`PaginationDelegate`].
-            pub struct $name<'c> {
-                client: &'c Client,
+            pub struct $name<'cu> {
+                client: &'cu isahc::HttpClient,
+                base: &'cu url::Url,
                 $($($var: $var_type,)*)?
                 params: $params,
                 pagination: Option<Pagination>,
             }
 
-            impl<'c> $name<'c> {
+            impl<'cu> $name<'cu> {
                 pub fn new(
-                    client: &'c Client,
+                    client: &'cu isahc::HttpClient,
+                    base: &'cu url::Url,
                     $($($var: $var_type,)*)?
                     mut params: $params,
                 ) -> Self {
@@ -279,6 +282,7 @@ pub(crate) mod pagination {
 
                     Self {
                         client,
+                        base,
                         $($($var,)*)?
                         params,
                         pagination: None,
@@ -292,7 +296,7 @@ pub(crate) mod pagination {
                 type Error = Error;
 
                 async fn next_page(&mut self) -> Result<Vec<Self::Item>, Self::Error> {
-                    let result = self.client.$pager($($(self.$var,)*)? &self.params).await;
+                    let result = $pager(self.client, self.base, $($(self.$var,)*)? &self.params).await;
 
                     result.map(|response| {
                         self.pagination = Some(response.pagination);
@@ -346,9 +350,9 @@ pub(crate) mod pagination {
     }
 
     /// See the documentation for [`PaginatedStream`].
-    pub type GamesStream<'c, 'f> = PaginatedStream<'f, GamesDelegate<'c>>;
+    pub type GamesStream<'cu, 'f> = PaginatedStream<'f, GamesDelegate<'cu>>;
     /// See the documentation for [`PaginatedStream`].
-    pub type ProjectSearchStream<'c, 'f> = PaginatedStream<'f, ProjectSearchDelegate<'c>>;
+    pub type ProjectSearchStream<'cu, 'f> = PaginatedStream<'f, ProjectSearchDelegate<'cu>>;
     /// See the documentation for [`PaginatedStream`].
-    pub type ProjectFilesStream<'c, 'f> = PaginatedStream<'f, ProjectFilesDelegate<'c>>;
+    pub type ProjectFilesStream<'cu, 'f> = PaginatedStream<'f, ProjectFilesDelegate<'cu>>;
 }
