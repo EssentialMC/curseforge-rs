@@ -104,9 +104,11 @@ macro_rules! endpoint {
 
         response.into_body().read_to_end(&mut bytes).await.unwrap();
 
-        match serde_json::from_slice(bytes.as_slice()) {
+        let jd = &mut serde_json::Deserializer::from_slice(bytes.as_slice());
+        let result = serde_path_to_error::deserialize(jd);
+        match result {
             Ok(value) => Ok(ApiResponse { bytes, value }),
-            Err(error) => Err(Error::Parsing { error, bytes }),
+            Err(error) => Err(Error::Parsing { error, bytes: Box::new(bytes) }),
         }
     }};
     (@uri, $base:ident, $path:literal) => {

@@ -79,8 +79,8 @@ pub enum Error {
     #[error("there was an error parsing a response\n{error}")]
     Parsing {
         #[source]
-        error: serde_json::Error,
-        bytes: Vec<u8>,
+        error: serde_path_to_error::Error<serde_json::Error>,
+        bytes: Box<Vec<u8>>,
     },
     #[error("there was an error constructing or receiving a request\n{0}")]
     Request(#[from] isahc::Error),
