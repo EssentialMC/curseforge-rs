@@ -74,8 +74,8 @@ pub use cfwidget::*;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("there was an error parsing a response:\n{error}\nencountered at: '{uri}'")]
-    Parsing {
+    #[error("there was an error deserializing a response:\n{error}\nencountered at: '{uri}'")]
+    Deserialize {
         uri: url::Url,
         #[source]
         error: serde_path_to_error::Error<serde_json::Error>,
@@ -85,8 +85,6 @@ pub enum Error {
     Request(#[from] isahc::Error),
     #[error("there was an error constructing the request\n{0}")]
     Http(#[from] isahc::http::Error),
-    #[error("there was an error deserializing the response body\n{0}")]
-    Deserialize(#[from] serde_json::Error),
     #[error("the string provided failed to parse as a URL\n{0}")]
     ParseBaseUrl(#[from] url::ParseError),
     #[error("the URL provided cannot be a base")]

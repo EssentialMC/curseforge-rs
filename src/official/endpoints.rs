@@ -107,7 +107,7 @@ macro_rules! endpoint {
         let result = serde_path_to_error::deserialize(jd);
         match result {
             Ok(value) => Ok(ApiResponse { bytes, value }),
-            Err(error) => Err(Error::Parsing { uri, error, bytes: Box::new(bytes) }),
+            Err(error) => Err(Error::Deserialize { uri, error, bytes: Box::new(bytes) }),
         }
     }};
     (@uri, $base:ident, $path:literal) => {
