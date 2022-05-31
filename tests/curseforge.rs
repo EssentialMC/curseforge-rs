@@ -24,7 +24,7 @@ fn game() {
 
         match &game {
             Ok(game) => println!("{:#?}", game),
-            Err(error) => panic!("{:#?}", error),
+            Err(error) => panic!("{}", error),
         }
     });
 }
@@ -38,7 +38,7 @@ fn games() {
 
         match &games {
             Ok(games) => println!("{:#?}", games),
-            Err(error) => panic!("{:#?}", error),
+            Err(error) => panic!("{}", error),
         }
     });
 }
@@ -53,7 +53,7 @@ fn game_versions() {
 
         match &versions {
             Ok(games) => println!("{:#?}", games),
-            Err(error) => panic!("{:#?}", error),
+            Err(error) => panic!("{}", error),
         }
     });
 }
@@ -68,7 +68,7 @@ fn game_version_types() {
 
         match &games {
             Ok(games) => println!("{:#?}", games),
-            Err(error) => panic!("{:#?}", error),
+            Err(error) => panic!("{}", error),
         }
     });
 }
@@ -83,7 +83,7 @@ fn categories() {
 
         match &categories {
             Ok(categories) => println!("{:#?}", categories),
-            Err(error) => panic!("{:#?}", error),
+            Err(error) => panic!("{}", error),
         }
     });
 }
@@ -99,7 +99,7 @@ fn search_projects() {
 
         match &result {
             Ok(response) => println!("{:#?}", response),
-            Err(error) => panic!("{:#?}", error),
+            Err(error) => panic!("{}", error),
         }
     });
 }
@@ -131,7 +131,7 @@ fn project() {
 
             match result {
                 Ok(project) => println!("{:#?}", project),
-                Err(error) => panic!("{:#?}", error),
+                Err(error) => panic!("{}", error),
             }
         }
     });
@@ -149,7 +149,7 @@ fn projects() {
 
         match result {
             Ok(projects) => println!("{:#?}", projects),
-            Err(error) => panic!("{:#?}", error),
+            Err(error) => panic!("{}", error),
         }
     });
 }
@@ -164,7 +164,7 @@ fn featured_projects() {
 
         match result {
             Ok(featured) => println!("{:#?}", featured),
-            Err(error) => panic!("{:#?}", error),
+            Err(error) => panic!("{}", error),
         }
     });
 }
@@ -179,9 +179,10 @@ fn project_description() {
 
         for project in project_ids {
             let result = e::project_description(&CLIENT.0, &CLIENT.1, project).await;
+            // let result = result.map(|description| description.data);
             match result {
-                Ok(description) => println!("{}", description),
-                Err(error) => panic!("{:#?}", error),
+                Ok(description) => println!("{}", **description),
+                Err(error) => panic!("{}", error),
             }
         }
     });
@@ -254,7 +255,7 @@ fn project_files() {
 
             match result {
                 Ok(projects) => println!("{:#?}", projects),
-                Err(error) => panic!("{:#?}", error),
+                Err(error) => panic!("{}", error),
             }
         }
     });
@@ -280,7 +281,7 @@ fn project_files_iter() {
             while let Some(result) = files.next().await {
                 match result {
                     Ok(file) => println!("{:#?}", file),
-                    Err(error) => panic!("{:#?}", error),
+                    Err(error) => panic!("{}", error),
                 }
             }
         }
@@ -296,6 +297,7 @@ fn project_files_by_ids() {
         let file_ids = projects.into_iter().map(|project| project.main_file_id);
 
         let result = e::project_files_by_ids(&CLIENT.0, &CLIENT.1, file_ids).await;
+        let result = result.map(|files| files.into_value().data);
 
         match result {
             Ok(files) => {
@@ -303,7 +305,7 @@ fn project_files_by_ids() {
                     println!("{:#?}", file);
                 }
             }
-            Err(error) => panic!("{:#?}", error),
+            Err(error) => panic!("{}", error),
         }
     });
 }
@@ -323,10 +325,11 @@ fn project_file_changelog() {
 
         for (project, file) in project_files.into_iter() {
             let result = e::project_file_changelog(&CLIENT.0, &CLIENT.1, project, file).await;
+            let result = result.map(|changelog| changelog.into_value().data);
 
             match result {
                 Ok(changelog) => println!("{}", changelog),
-                Err(error) => panic!("{:#?}", error),
+                Err(error) => panic!("{}", error),
             }
         }
     });
@@ -347,10 +350,11 @@ fn project_file_download_url() {
 
         for (project, file) in project_files.into_iter() {
             let result = e::project_file_download_url(&CLIENT.0, &CLIENT.1, project, file).await;
+            let result = result.map(|url| url.into_value().data);
 
             match result {
                 Ok(download) => println!("{}", download),
-                Err(error) => panic!("{:#?}", error),
+                Err(error) => panic!("{}", error),
             }
         }
     });
