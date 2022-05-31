@@ -74,6 +74,11 @@ pub use cfwidget::*;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    #[error("there was an error parsing a response\n{error}")]
+    Parsing {
+        error: serde_json::Error,
+        bytes: Vec<u8>,
+    },
     #[error("there was an error constructing or receiving a request\n{0}")]
     Request(#[from] isahc::Error),
     #[error("there was an error constructing the request\n{0}")]

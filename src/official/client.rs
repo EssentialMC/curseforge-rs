@@ -58,12 +58,12 @@ impl Client {
 
     /// [`e::game`]
     pub async fn game(&self, game_id: i32) -> Result<Game, Error> {
-        e::game(&self.inner, &self.base, game_id).await
+        Ok(e::game(&self.inner, &self.base, game_id).await?.value.data)
     }
 
     /// [`e::games`]
     pub async fn games(&self, params: &GamesParams) -> Result<PaginatedDataResponse<Game>, Error> {
-        e::games(&self.inner, &self.base, params).await
+        Ok(e::games(&self.inner, &self.base, params).await?.value)
     }
 
     /// [`e::games_iter`]
@@ -73,17 +73,26 @@ impl Client {
 
     /// [`e::game_versions`]
     pub async fn game_versions(&self, game_id: i32) -> Result<Vec<GameVersions>, Error> {
-        e::game_versions(&self.inner, &self.base, game_id).await
+        Ok(e::game_versions(&self.inner, &self.base, game_id)
+            .await?
+            .value
+            .data)
     }
 
     /// [`e::game_version_types`]
     pub async fn game_version_types(&self, game_id: i32) -> Result<Vec<GameVersionType>, Error> {
-        e::game_version_types(&self.inner, &self.base, game_id).await
+        Ok(e::game_version_types(&self.inner, &self.base, game_id)
+            .await?
+            .value
+            .data)
     }
 
     /// [`e::categories`]
     pub async fn categories(&self, params: &CategoriesParams) -> Result<Vec<Category>, Error> {
-        e::categories(&self.inner, &self.base, params).await
+        Ok(e::categories(&self.inner, &self.base, params)
+            .await?
+            .value
+            .data)
     }
 
     /// [`e::search_projects`]
@@ -91,7 +100,9 @@ impl Client {
         &self,
         params: &ProjectSearchParams,
     ) -> Result<PaginatedDataResponse<Project>, Error> {
-        e::search_projects(&self.inner, &self.base, params).await
+        Ok(e::search_projects(&self.inner, &self.base, params)
+            .await?
+            .value)
     }
 
     /// [`e::search_projects_iter`]
@@ -101,7 +112,10 @@ impl Client {
 
     /// [`e::project`]
     pub async fn project(&self, project_id: i32) -> Result<Project, Error> {
-        e::project(&self.inner, &self.base, project_id).await
+        Ok(e::project(&self.inner, &self.base, project_id)
+            .await?
+            .value
+            .data)
     }
 
     /// [`e::projects`]
@@ -109,7 +123,10 @@ impl Client {
     where
         I: IntoIterator<Item = i32>,
     {
-        e::projects(&self.inner, &self.base, project_ids).await
+        Ok(e::projects(&self.inner, &self.base, project_ids)
+            .await?
+            .value
+            .data)
     }
 
     /// [`e::featured_projects`]
@@ -117,23 +134,35 @@ impl Client {
         &self,
         body: &FeaturedProjectsBody,
     ) -> Result<FeaturedProjects, Error> {
-        e::featured_projects(&self.inner, &self.base, body).await
+        Ok(e::featured_projects(&self.inner, &self.base, body)
+            .await?
+            .value
+            .data)
     }
 
     /// [`e::project_description`]
     pub async fn project_description(&self, project_id: i32) -> Result<String, Error> {
-        e::project_description(&self.inner, &self.base, project_id).await
+        Ok(e::project_description(&self.inner, &self.base, project_id)
+            .await?
+            .value
+            .data)
     }
 
     /// [`e::project_file`]
     pub async fn project_file(&self, project_id: i32, file_id: i32) -> Result<ProjectFile, Error> {
-        e::project_file(&self.inner, &self.base, project_id, file_id).await
+        Ok(
+            e::project_file(&self.inner, &self.base, project_id, file_id)
+                .await?
+                .value
+                .data,
+        )
     }
 
     /// [`e::project_file_by_id`]
     pub async fn project_file_by_id(&self, file_id: i32) -> Result<ProjectFile, Error> {
         Ok(e::project_files_by_ids(&self.inner, &self.base, [file_id])
             .await?
+            .value
             .pop()
             .unwrap())
     }
@@ -144,7 +173,11 @@ impl Client {
         project_id: i32,
         params: &ProjectFilesParams,
     ) -> Result<PaginatedDataResponse<ProjectFile>, Error> {
-        e::project_files(&self.inner, &self.base, project_id, params).await
+        Ok(
+            e::project_files(&self.inner, &self.base, project_id, params)
+                .await?
+                .value,
+        )
     }
 
     /// [`e::project_files_iter`]
@@ -161,7 +194,10 @@ impl Client {
     where
         I: IntoIterator<Item = i32>,
     {
-        e::project_files_by_ids(&self.inner, &self.base, file_ids).await
+        Ok(e::project_files_by_ids(&self.inner, &self.base, file_ids)
+            .await?
+            .value
+            .data)
     }
 
     /// [`e::project_file_changelog`]
@@ -170,7 +206,12 @@ impl Client {
         project_id: i32,
         file_id: i32,
     ) -> Result<String, Error> {
-        e::project_file_changelog(&self.inner, &self.base, project_id, file_id).await
+        Ok(
+            e::project_file_changelog(&self.inner, &self.base, project_id, file_id)
+                .await?
+                .value
+                .data,
+        )
     }
 
     /// [`e::project_file_download_url`]
@@ -179,7 +220,12 @@ impl Client {
         project_id: i32,
         file_id: i32,
     ) -> Result<String, Error> {
-        e::project_file_download_url(&self.inner, &self.base, project_id, file_id).await
+        Ok(
+            e::project_file_download_url(&self.inner, &self.base, project_id, file_id)
+                .await?
+                .value
+                .data,
+        )
     }
 }
 
@@ -209,49 +255,50 @@ pub mod e {
     /// [documentation](https://docs.curseforge.com/#pagination-limits) for more information.
     pub const API_PAGINATION_RESULTS_LIMIT: usize = 10_000;
 
+    #[derive(Debug)]
+    pub struct ApiResponse<T> {
+        pub bytes: Vec<u8>,
+        pub value: T,
+    }
+
+    pub type ApiDataResult<T> = Result<ApiResponse<DataResponse<T>>, Error>;
+    pub type ApiPageResult<T> = Result<ApiResponse<PaginatedDataResponse<T>>, Error>;
+
     macro_rules! endpoint {
         (
-            $client:ident $method:ident $base:ident / $uri:literal,
+            $client:ident $method:ident
+            uri: $base:ident / $path:literal,
             $(vars: [$($var:ident),+],)?
             $(params: $params:expr,)?
             $(body: $body:expr,)?
-            into: $into:path,
         ) => {{
             use futures_lite::io::AsyncReadExt;
 
             #[allow(unused_mut)]
-            let mut url = endpoint!(@uri, $base, $uri $(, [$($var),*])?);
+            let mut url = endpoint!(@uri, $base, $path $(, [$($var),*])?);
 
             $(url.set_query(Some(&serde_qs::to_string($params).unwrap()));)?
 
-            let builder = isahc::Request::builder().method(endpoint!(@str $method)).uri(url.as_str());
+            let builder = isahc::Request::builder()
+                .method(endpoint!(@str $method))
+                .uri(url.as_str());
             let request = endpoint!(@build, builder $(, $body)?)?;
 
             let response = $client.send_async(request).await?;
-            let (head, mut body) = response.into_parts();
-
-            // let mut bytes = Vec::with_capacity(
-            //     head.headers
-            //         .get("content-length")
-            //         .unwrap()
-            //         .to_str()
-            //         .unwrap()
-            //         .parse()
-            //         .unwrap(),
-            // );
             let mut bytes = Vec::new();
 
-            body.read_to_end(&mut bytes).await.unwrap();
+            response.into_body().read_to_end(&mut bytes).await.unwrap();
 
-            let value: $into = serde_json::from_slice(bytes.as_slice())?;
-
-            (head, bytes, value)
+            match serde_json::from_slice(bytes.as_slice()) {
+                Ok(value) => Ok(ApiResponse { bytes, value }),
+                Err(error) => Err(Error::Parsing { error, bytes }),
+            }
         }};
-        (@uri, $base:ident, $uri:literal) => {
-            $base.join($uri).unwrap()
+        (@uri, $base:ident, $path:literal) => {
+            $base.join($path).unwrap()
         };
-        (@uri, $base:ident, $uri:literal, [$($var:ident),+]) => {
-            $base.join(&format!($uri, $($var),*)).unwrap()
+        (@uri, $base:ident, $path:literal, [$($var:ident),+]) => {
+            $base.join(&format!($path, $($var),*)).unwrap()
         };
         (@build, $builder:ident) => {
             $builder.body(())
@@ -272,14 +319,12 @@ pub mod e {
         client: &isahc::HttpClient,
         base: &url::Url,
         game_id: i32,
-    ) -> Result<Game, Error> {
-        let (_response, _bytes, value) = endpoint! {
-            client GET base / "games/{}",
+    ) -> ApiDataResult<Game> {
+        endpoint! {
+            client GET
+            uri: base / "games/{}",
             vars: [game_id],
-            into: DataResponse<_>,
-        };
-
-        Ok(value.data)
+        }
     }
 
     /// <https://docs.curseforge.com/#get-games>
@@ -287,14 +332,12 @@ pub mod e {
         client: &isahc::HttpClient,
         base: &url::Url,
         params: &GamesParams,
-    ) -> Result<PaginatedDataResponse<Game>, Error> {
-        let (_response, _bytes, value) = endpoint! {
-            client GET base / "games",
+    ) -> ApiPageResult<Game> {
+        endpoint! {
+            client GET
+            uri: base / "games",
             params: params,
-            into: PaginatedDataResponse<_>,
-        };
-
-        Ok(value)
+        }
     }
 
     /// <https://docs.curseforge.com/#get-games>
@@ -311,14 +354,12 @@ pub mod e {
         client: &isahc::HttpClient,
         base: &url::Url,
         game_id: i32,
-    ) -> Result<Vec<GameVersions>, Error> {
-        let (_response, _bytes, value) = endpoint! {
-            client GET base / "games/{}/versions",
+    ) -> ApiDataResult<Vec<GameVersions>> {
+        endpoint! {
+            client GET
+            uri: base / "games/{}/versions",
             vars: [game_id],
-            into: DataResponse<_>,
-        };
-
-        Ok(value.data)
+        }
     }
 
     /// <https://docs.curseforge.com/#get-version-types>
@@ -326,14 +367,12 @@ pub mod e {
         client: &isahc::HttpClient,
         base: &url::Url,
         game_id: i32,
-    ) -> Result<Vec<GameVersionType>, Error> {
-        let (_response, _bytes, value) = endpoint! {
-            client GET base / "games/{}/version-types",
+    ) -> ApiDataResult<Vec<GameVersionType>> {
+        endpoint! {
+            client GET
+            uri: base / "games/{}/version-types",
             vars: [game_id],
-            into: DataResponse<_>,
-        };
-
-        Ok(value.data)
+        }
     }
 
     /// <https://docs.curseforge.com/#get-categories>
@@ -341,14 +380,12 @@ pub mod e {
         client: &isahc::HttpClient,
         base: &url::Url,
         params: &CategoriesParams,
-    ) -> Result<Vec<Category>, Error> {
-        let (_response, _bytes, value) = endpoint! {
-            client GET base / "categories",
+    ) -> ApiDataResult<Vec<Category>> {
+        endpoint! {
+            client GET
+            uri: base / "categories",
             params: params,
-            into: DataResponse<_>,
-        };
-
-        Ok(value.data)
+        }
     }
 
     /// <https://docs.curseforge.com/#search-mods>
@@ -356,14 +393,12 @@ pub mod e {
         client: &isahc::HttpClient,
         base: &url::Url,
         params: &ProjectSearchParams,
-    ) -> Result<PaginatedDataResponse<Project>, Error> {
-        let (_response, _bytes, value) = endpoint! {
-            client GET base / "mods/search",
+    ) -> ApiPageResult<Project> {
+        endpoint! {
+            client GET
+            uri: base / "mods/search",
             params: params,
-            into: PaginatedDataResponse<_>,
-        };
-
-        Ok(value)
+        }
     }
 
     /// <https://docs.curseforge.com/#search-mods>
@@ -387,14 +422,12 @@ pub mod e {
         client: &isahc::HttpClient,
         base: &url::Url,
         project_id: i32,
-    ) -> Result<Project, Error> {
-        let (_response, _bytes, value) = endpoint! {
-            client GET base / "mods/{}",
+    ) -> ApiDataResult<Project> {
+        endpoint! {
+            client GET
+            uri: base / "mods/{}",
             vars: [project_id],
-            into: DataResponse<_>,
-        };
-
-        Ok(value.data)
+        }
     }
 
     /// <https://docs.curseforge.com/#get-mods>
@@ -402,17 +435,15 @@ pub mod e {
         client: &isahc::HttpClient,
         base: &url::Url,
         project_ids: I,
-    ) -> Result<Vec<Project>, Error>
+    ) -> ApiDataResult<Vec<Project>>
     where
         I: IntoIterator<Item = i32>,
     {
-        let (_response, _bytes, value) = endpoint! {
-            client POST base / "mods",
+        endpoint! {
+            client POST
+            uri: base / "mods",
             body: &several_body!("modIds", i32, project_ids.into_iter()),
-            into: DataResponse<_>,
-        };
-
-        Ok(value.data)
+        }
     }
 
     /// <https://docs.curseforge.com/#get-featured-mods>
@@ -420,14 +451,12 @@ pub mod e {
         client: &isahc::HttpClient,
         base: &url::Url,
         body: &FeaturedProjectsBody,
-    ) -> Result<FeaturedProjects, Error> {
-        let (_response, _bytes, value) = endpoint! {
-            client POST base / "mods/featured",
+    ) -> ApiDataResult<FeaturedProjects> {
+        endpoint! {
+            client POST
+            uri: base / "mods/featured",
             body: body,
-            into: DataResponse<_>,
-        };
-
-        Ok(value.data)
+        }
     }
 
     /// <https://docs.curseforge.com/#get-mod-description>
@@ -435,14 +464,12 @@ pub mod e {
         client: &isahc::HttpClient,
         base: &url::Url,
         project_id: i32,
-    ) -> Result<String, Error> {
-        let (_response, _bytes, value) = endpoint! {
-            client GET base / "mods/{}/description",
+    ) -> ApiDataResult<String> {
+        endpoint! {
+            client GET
+            uri: base / "mods/{}/description",
             vars: [project_id],
-            into: DataResponse<_>,
-        };
-
-        Ok(value.data)
+        }
     }
 
     /// <https://docs.curseforge.com/#get-mod-file>
@@ -451,14 +478,12 @@ pub mod e {
         base: &url::Url,
         project_id: i32,
         file_id: i32,
-    ) -> Result<ProjectFile, Error> {
-        let (_response, _bytes, value) = endpoint! {
-            client GET base / "mods/{}/files/{}",
+    ) -> ApiDataResult<ProjectFile> {
+        endpoint! {
+            client GET
+            uri: base / "mods/{}/files/{}",
             vars: [project_id, file_id],
-            into: DataResponse<_>,
-        };
-
-        Ok(value.data)
+        }
     }
 
     /// Alternative method to [`project_file`] that eliminates the need
@@ -468,11 +493,18 @@ pub mod e {
         client: &isahc::HttpClient,
         base: &url::Url,
         file_id: i32,
-    ) -> Result<ProjectFile, Error> {
-        Ok(project_files_by_ids(client, base, [file_id])
-            .await?
-            .pop()
-            .unwrap())
+    ) -> ApiDataResult<ProjectFile> {
+        project_files_by_ids(client, base, [file_id])
+            .await
+            .map(|mut r| ApiResponse {
+                bytes: r.bytes,
+                // Use of unwrap: if no item were present the bytes would be empty (parse error)
+                value: DataResponse {
+                    data: r.value.data.pop().unwrap(),
+                    #[cfg(feature = "allow-unknown-fields")]
+                    other_fields: r.value.other_fields,
+                },
+            })
     }
 
     /// <https://docs.curseforge.com/#get-mod-files>
@@ -481,15 +513,13 @@ pub mod e {
         base: &url::Url,
         project_id: i32,
         params: &ProjectFilesParams,
-    ) -> Result<PaginatedDataResponse<ProjectFile>, Error> {
-        let (_response, _bytes, value) = endpoint! {
-            client GET base / "mods/{}/files",
+    ) -> ApiPageResult<ProjectFile> {
+        endpoint! {
+            client GET
+            uri: base / "mods/{}/files",
             vars: [project_id],
             params: params,
-            into: PaginatedDataResponse<_>,
-        };
-
-        Ok(value)
+        }
     }
 
     /// <https://docs.curseforge.com/#get-mod-files>
@@ -511,17 +541,15 @@ pub mod e {
         client: &isahc::HttpClient,
         base: &url::Url,
         file_ids: I,
-    ) -> Result<Vec<ProjectFile>, Error>
+    ) -> ApiDataResult<Vec<ProjectFile>>
     where
         I: IntoIterator<Item = i32>,
     {
-        let (_response, _bytes, value) = endpoint! {
-            client POST base / "mods/files",
+        endpoint! {
+            client POST
+            uri: base / "mods/files",
             body: &several_body!("fileIds", i32, file_ids.into_iter()),
-            into: DataResponse<_>,
-        };
-
-        Ok(value.data)
+        }
     }
 
     /// <https://docs.curseforge.com/#get-mod-file-changelog>
@@ -530,14 +558,12 @@ pub mod e {
         base: &url::Url,
         project_id: i32,
         file_id: i32,
-    ) -> Result<String, Error> {
-        let (_response, _bytes, value) = endpoint! {
-            client GET base / "mods/{}/files/{}/changelog",
+    ) -> ApiDataResult<String> {
+        endpoint! {
+            client GET
+            uri: base / "mods/{}/files/{}/changelog",
             vars: [project_id, file_id],
-            into: DataResponse<_>,
-        };
-
-        Ok(value.data)
+        }
     }
 
     /// <https://docs.curseforge.com/#get-mod-file-download-url>
@@ -546,13 +572,11 @@ pub mod e {
         base: &url::Url,
         project_id: i32,
         file_id: i32,
-    ) -> Result<String, Error> {
-        let (_response, _bytes, value) = endpoint! {
-            client GET base / "mods/{}/files/{}/download-url",
+    ) -> ApiDataResult<String> {
+        endpoint! {
+            client GET
+            uri: base / "mods/{}/files/{}/download-url",
             vars: [project_id, file_id],
-            into: DataResponse<_>,
-        };
-
-        Ok(value.data)
+        }
     }
 }

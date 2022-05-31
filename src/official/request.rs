@@ -155,6 +155,7 @@ pub(crate) mod params {
 
 pub(crate) mod response {
     use serde::{Deserialize, Serialize};
+    use std::ops::{Deref, DerefMut};
 
     use super::types::Pagination;
 
@@ -210,6 +211,20 @@ pub(crate) mod response {
         pub other_fields: serde_json::Value,
     }
 
+    impl<T> Deref for DataResponse<T> {
+        type Target = T;
+
+        fn deref(&self) -> &Self::Target {
+            &self.data
+        }
+    }
+
+    impl<T> DerefMut for DataResponse<T> {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.data
+        }
+    }
+
     /// Wraps API responses which have the fields `data` and `pagination`.
     ///
     /// | [`Client`] Methods       | API Reference            |
@@ -247,8 +262,7 @@ pub(crate) mod pagination {
     use async_trait::async_trait;
     use awaur::paginator::{PaginatedStream, PaginationDelegate};
 
-    use super::client::e::*;
-    use super::client::API_PAGINATION_RESULTS_LIMIT;
+    use super::client::{e, API_PAGINATION_RESULTS_LIMIT};
     use super::params::{GamesParams, ProjectFilesParams, ProjectSearchParams};
     use super::types::{Game, Pagination, Project, ProjectFile};
     use crate::Error;
@@ -257,7 +271,7 @@ pub(crate) mod pagination {
         (
             $name:ident {
                 item: $item:ty,
-                pager: $pager:ident,
+                pager: $pager:path,
                 $(vars: [$($var:ident: $var_type:ty),+],)?
                 params: $params:ty,
             }
@@ -296,12 +310,9 @@ pub(crate) mod pagination {
                 type Error = Error;
 
                 async fn next_page(&mut self) -> Result<Vec<Self::Item>, Self::Error> {
-                    let result = $pager(self.client, self.base, $($(self.$var,)*)? &self.params).await;
-
-                    result.map(|response| {
-                        self.pagination = Some(response.pagination);
-                        response.data
-                    })
+                    let result = $pager(self.client, self.base, $($(self.$var,)*)? &self.params).await?;
+                    self.pagination = Some(result.value.pagination);
+                    Ok(result.value.data)
                 }
 
                 fn offset(&self) -> usize {
@@ -327,7 +338,7 @@ pub(crate) mod pagination {
     pagination_delegate! {
         GamesDelegate {
             item: Game,
-            pager: games,
+            pager: e::games,
             params: GamesParams,
         }
     }
@@ -335,7 +346,7 @@ pub(crate) mod pagination {
     pagination_delegate! {
         ProjectSearchDelegate {
             item: Project,
-            pager: search_projects,
+            pager: e::search_projects,
             params: ProjectSearchParams,
         }
     }
@@ -343,7 +354,7 @@ pub(crate) mod pagination {
     pagination_delegate! {
         ProjectFilesDelegate {
             item: ProjectFile,
-            pager: project_files,
+            pager: e::project_files,
             vars: [project_id: i32],
             params: ProjectFilesParams,
         }
