@@ -72,7 +72,9 @@ pub use official::*;
 #[doc(inline)]
 pub use cfwidget::*;
 
-#[derive(Debug, thiserror::Error)]
+use std::fmt::{Debug, Formatter};
+
+#[derive(thiserror::Error)]
 pub enum Error {
     #[error("there was an error parsing a response\n{error}")]
     Parsing {
@@ -90,4 +92,40 @@ pub enum Error {
     ParseBaseUrl(#[from] url::ParseError),
     #[error("the URL provided cannot be a base")]
     BadBaseUrl,
+}
+
+impl Debug for Error {
+    fn fmt(&self, fmt: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Error::Parsing { error, bytes } => {
+                write!(fmt, "there was an error parsing a response\n{}", error)?;
+                write!(fmt, "the response was:\n{}", String::from_utf8_lossy(bytes))
+            }
+            Error::Request(error) => write!(
+                fmt,
+                "there was an error constructing or receiving a request\n{}",
+                error
+            ),
+            Error::Http(error) => {
+                write!(
+                    fmt,
+                    "there was an error constructing the request\n{}",
+                    error
+                )
+            }
+            Error::Deserialize(error) => write!(
+                fmt,
+                "there was an error deserializing the response body\n{}",
+                error
+            ),
+            Error::ParseBaseUrl(error) => {
+                write!(
+                    fmt,
+                    "the string provided failed to parse as a URL\n{}",
+                    error
+                )
+            }
+            Error::BadBaseUrl => write!(fmt, "the URL provided cannot be a base"),
+        }
+    }
 }
