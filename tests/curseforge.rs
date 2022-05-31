@@ -223,13 +223,11 @@ fn project_file() {
 fn project_file_by_id() {
     smol::block_on(async {
         let projects = sample_search_projects(GAME_MINECRAFT, 150).await;
-        let project_files = projects
+        let files = projects
             .into_iter()
-            .map(|project| project.latest_files.into_iter().map(|file| file.id))
-            .flatten()
-            .collect::<Vec<_>>();
+            .flat_map(|project| project.latest_files.into_iter().map(|file| file.id));
 
-        for file in project_files.into_iter() {
+        for file in files {
             let result = e::project_file_by_id(&CLIENT.0, &CLIENT.1, file).await;
 
             match result {
