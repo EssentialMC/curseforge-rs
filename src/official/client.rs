@@ -58,12 +58,17 @@ impl Client {
 
     /// [`e::game`]
     pub async fn game(&self, game_id: i32) -> Result<Game, Error> {
-        Ok(e::game(&self.inner, &self.base, game_id).await?.value.data)
+        Ok(e::game(&self.inner, &self.base, game_id)
+            .await?
+            .into_value()
+            .data)
     }
 
     /// [`e::games`]
     pub async fn games(&self, params: &GamesParams) -> Result<PaginatedDataResponse<Game>, Error> {
-        Ok(e::games(&self.inner, &self.base, params).await?.value)
+        Ok(e::games(&self.inner, &self.base, params)
+            .await?
+            .into_value())
     }
 
     /// [`e::games_iter`]
@@ -75,7 +80,7 @@ impl Client {
     pub async fn game_versions(&self, game_id: i32) -> Result<Vec<GameVersions>, Error> {
         Ok(e::game_versions(&self.inner, &self.base, game_id)
             .await?
-            .value
+            .into_value()
             .data)
     }
 
@@ -83,7 +88,7 @@ impl Client {
     pub async fn game_version_types(&self, game_id: i32) -> Result<Vec<GameVersionType>, Error> {
         Ok(e::game_version_types(&self.inner, &self.base, game_id)
             .await?
-            .value
+            .into_value()
             .data)
     }
 
@@ -91,7 +96,7 @@ impl Client {
     pub async fn categories(&self, params: &CategoriesParams) -> Result<Vec<Category>, Error> {
         Ok(e::categories(&self.inner, &self.base, params)
             .await?
-            .value
+            .into_value()
             .data)
     }
 
@@ -102,7 +107,7 @@ impl Client {
     ) -> Result<PaginatedDataResponse<Project>, Error> {
         Ok(e::search_projects(&self.inner, &self.base, params)
             .await?
-            .value)
+            .into_value())
     }
 
     /// [`e::search_projects_iter`]
@@ -114,7 +119,7 @@ impl Client {
     pub async fn project(&self, project_id: i32) -> Result<Project, Error> {
         Ok(e::project(&self.inner, &self.base, project_id)
             .await?
-            .value
+            .into_value()
             .data)
     }
 
@@ -125,7 +130,7 @@ impl Client {
     {
         Ok(e::projects(&self.inner, &self.base, project_ids)
             .await?
-            .value
+            .into_value()
             .data)
     }
 
@@ -136,7 +141,7 @@ impl Client {
     ) -> Result<FeaturedProjects, Error> {
         Ok(e::featured_projects(&self.inner, &self.base, body)
             .await?
-            .value
+            .into_value()
             .data)
     }
 
@@ -144,7 +149,7 @@ impl Client {
     pub async fn project_description(&self, project_id: i32) -> Result<String, Error> {
         Ok(e::project_description(&self.inner, &self.base, project_id)
             .await?
-            .value
+            .into_value()
             .data)
     }
 
@@ -153,7 +158,7 @@ impl Client {
         Ok(
             e::project_file(&self.inner, &self.base, project_id, file_id)
                 .await?
-                .value
+                .into_value()
                 .data,
         )
     }
@@ -162,7 +167,7 @@ impl Client {
     pub async fn project_file_by_id(&self, file_id: i32) -> Result<ProjectFile, Error> {
         Ok(e::project_files_by_ids(&self.inner, &self.base, [file_id])
             .await?
-            .value
+            .into_value()
             .pop()
             .unwrap())
     }
@@ -176,7 +181,7 @@ impl Client {
         Ok(
             e::project_files(&self.inner, &self.base, project_id, params)
                 .await?
-                .value,
+                .into_value(),
         )
     }
 
@@ -196,7 +201,7 @@ impl Client {
     {
         Ok(e::project_files_by_ids(&self.inner, &self.base, file_ids)
             .await?
-            .value
+            .into_value()
             .data)
     }
 
@@ -209,7 +214,7 @@ impl Client {
         Ok(
             e::project_file_changelog(&self.inner, &self.base, project_id, file_id)
                 .await?
-                .value
+                .into_value()
                 .data,
         )
     }
@@ -223,7 +228,7 @@ impl Client {
         Ok(
             e::project_file_download_url(&self.inner, &self.base, project_id, file_id)
                 .await?
-                .value
+                .into_value()
                 .data,
         )
     }
@@ -232,6 +237,9 @@ impl Client {
 pub mod e {
     //! Contains methods that take an [`isahc::HttpClient`] and make a request
     //! to a CurseForge endpoint.
+
+    use std::fmt::Debug;
+    use std::ops::{Deref, DerefMut};
 
     use crate::official::request::pagination::{
         GamesDelegate, GamesStream, ProjectFilesDelegate, ProjectFilesStream,
@@ -257,8 +265,52 @@ pub mod e {
 
     #[derive(Debug)]
     pub struct ApiResponse<T> {
-        pub bytes: Vec<u8>,
-        pub value: T,
+        bytes: Vec<u8>,
+        value: T,
+    }
+
+    impl<T> ApiResponse<T> {
+        pub fn get_bytes(&self) -> &[u8] {
+            &self.bytes
+        }
+
+        pub fn get_bytes_mut(&mut self) -> &mut [u8] {
+            &mut self.bytes
+        }
+
+        pub fn get_value(&self) -> &T {
+            &self.value
+        }
+
+        pub fn get_value_mut(&mut self) -> &mut T {
+            &mut self.value
+        }
+
+        pub fn into_bytes(self) -> Vec<u8> {
+            self.bytes
+        }
+
+        pub fn into_value(self) -> T {
+            self.value
+        }
+
+        pub fn into_bytes_value(self) -> (Vec<u8>, T) {
+            (self.bytes, self.value)
+        }
+    }
+
+    impl<T> Deref for ApiResponse<T> {
+        type Target = T;
+
+        fn deref(&self) -> &Self::Target {
+            &self.value
+        }
+    }
+
+    impl<T> DerefMut for ApiResponse<T> {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.value
+        }
     }
 
     pub type ApiDataResult<T> = Result<ApiResponse<DataResponse<T>>, Error>;

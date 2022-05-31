@@ -310,9 +310,16 @@ pub(crate) mod pagination {
                 type Error = Error;
 
                 async fn next_page(&mut self) -> Result<Vec<Self::Item>, Self::Error> {
-                    let result = $pager(self.client, self.base, $($(self.$var,)*)? &self.params).await?;
-                    self.pagination = Some(result.value.pagination);
-                    Ok(result.value.data)
+                    let result = $pager(
+                            self.client,
+                            self.base,
+                            $($(self.$var,)*)?
+                            &self.params
+                        )
+                        .await?
+                        .into_value();
+                    self.pagination = Some(result.pagination);
+                    Ok(result.data)
                 }
 
                 fn offset(&self) -> usize {
