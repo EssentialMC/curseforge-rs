@@ -76,6 +76,7 @@ pub use cfwidget::*;
 pub enum Error {
     #[error("there was an error parsing a response\n{error}")]
     Parsing {
+        #[source]
         error: serde_json::Error,
         bytes: Vec<u8>,
     },
