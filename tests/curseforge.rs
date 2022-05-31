@@ -298,10 +298,10 @@ fn project_files_by_ids() {
         let result = result.map(|files| files.into_value().data);
 
         match result {
-            Ok(files) => {
-                for _file in files {
-                    () /* println!("{:#?}", file) */;
-                }
+            Ok(_files) => {
+                // for _file in files {
+                //     (); /* println!("{:#?}", file) */
+                // }
             }
             Err(error) => panic!("{}", error),
         }
@@ -326,7 +326,7 @@ fn project_file_changelog() {
             let result = result.map(|changelog| changelog.into_value().data);
 
             match result {
-                Ok(changelog) => println!("{}", changelog),
+                Ok(_changelog) => (), /* println!("{}", changelog) */
                 Err(error) => panic!("{}", error),
             }
         }
@@ -351,8 +351,7 @@ fn project_file_download_url() {
             let result = result.map(|url| url.into_value().data);
 
             match result {
-                Ok(download) => println!("{}", download),
-                Err(error) => panic!("{}", error),
+                Ok(_download) => (), /* println!("{}", download) */
             }
         }
     });

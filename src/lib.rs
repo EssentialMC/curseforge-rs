@@ -83,6 +83,12 @@ pub enum Error {
     },
     #[error("there was an error constructing or receiving a request\n{0}")]
     Request(#[from] isahc::Error),
+    #[error("request was expected to recieve 200 OK but got {status}\nencountered at: '{uri}'")]
+    StatusNotOk {
+        uri: url::Url,
+        status: isahc::http::StatusCode,
+        bytes: Vec<u8>,
+    },
     #[error("there was an error constructing the request\n{0}")]
     Http(#[from] isahc::http::Error),
     #[error("the string provided failed to parse as a URL\n{0}")]

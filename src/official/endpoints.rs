@@ -99,9 +99,14 @@ macro_rules! endpoint {
         let request = endpoint!(@build, builder $(, $body)?)?;
 
         let response = $client.send_async(request).await?;
+        let status = response.status();
         let mut bytes = Vec::new();
 
         response.into_body().read_to_end(&mut bytes).await.unwrap();
+
+        if status != 200 {
+            return Err(Error::StatusNotOk { uri, status, bytes });
+        }
 
         let jd = &mut serde_json::Deserializer::from_slice(bytes.as_slice());
         let result = serde_path_to_error::deserialize(jd);
