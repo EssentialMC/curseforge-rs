@@ -262,7 +262,8 @@ pub(crate) mod pagination {
     use async_trait::async_trait;
     use awaur::paginator::{PaginatedStream, PaginationDelegate};
 
-    use super::client::{e, API_PAGINATION_RESULTS_LIMIT};
+    use super::client::API_PAGINATION_RESULTS_LIMIT;
+    use super::endpoints as e;
     use super::params::{GamesParams, ProjectFilesParams, ProjectSearchParams};
     use super::types::{Game, Pagination, Project, ProjectFile};
     use crate::Error;

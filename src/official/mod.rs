@@ -1,6 +1,7 @@
 //! Exports all modules regarding the official CurseForge API.
 
 pub mod client;
+pub mod endpoints;
 pub mod request;
 pub mod types;
 
@@ -9,6 +10,7 @@ pub mod types;
 pub mod prelude {
     #[doc(inline)]
     pub use super::client::*;
+    pub use super::endpoints as e;
     #[doc(inline)]
     pub use super::request::*;
     #[doc(inline)]
