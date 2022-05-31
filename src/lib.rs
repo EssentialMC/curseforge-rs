@@ -72,12 +72,11 @@ pub use official::*;
 #[doc(inline)]
 pub use cfwidget::*;
 
-use std::fmt::{Debug, Formatter};
-
-#[derive(thiserror::Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("there was an error parsing a response\n{error}")]
+    #[error("there was an error parsing a response:\n{error}\nencountered at: '{uri}'")]
     Parsing {
+        uri: url::Url,
         #[source]
         error: serde_path_to_error::Error<serde_json::Error>,
         bytes: Box<Vec<u8>>,
@@ -92,40 +91,4 @@ pub enum Error {
     ParseBaseUrl(#[from] url::ParseError),
     #[error("the URL provided cannot be a base")]
     BadBaseUrl,
-}
-
-impl Debug for Error {
-    fn fmt(&self, fmt: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Error::Parsing { error, bytes } => {
-                writeln!(fmt, "there was an error parsing a response\n{}", error)?;
-                write!(fmt, "the response was:\n{}", String::from_utf8_lossy(bytes))
-            }
-            Error::Request(error) => write!(
-                fmt,
-                "there was an error constructing or receiving a request\n{}",
-                error
-            ),
-            Error::Http(error) => {
-                write!(
-                    fmt,
-                    "there was an error constructing the request\n{}",
-                    error
-                )
-            }
-            Error::Deserialize(error) => write!(
-                fmt,
-                "there was an error deserializing the response body\n{}",
-                error
-            ),
-            Error::ParseBaseUrl(error) => {
-                write!(
-                    fmt,
-                    "the string provided failed to parse as a URL\n{}",
-                    error
-                )
-            }
-            Error::BadBaseUrl => write!(fmt, "the URL provided cannot be a base"),
-        }
-    }
 }

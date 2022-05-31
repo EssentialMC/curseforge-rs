@@ -23,7 +23,7 @@ fn game() {
         let game = e::game(&CLIENT.0, &CLIENT.1, GAME_TERRARIA).await;
 
         match &game {
-            Ok(game) => println!("{:#?}", game),
+            Ok(_game) => (), /* println!("{:#?}", game) */
             Err(error) => panic!("{}", error),
         }
     });
@@ -37,7 +37,7 @@ fn games() {
         let games = e::games(&CLIENT.0, &CLIENT.1, &params).await;
 
         match &games {
-            Ok(games) => println!("{:#?}", games),
+            Ok(_games) => (), /* println!("{:#?}", games) */
             Err(error) => panic!("{}", error),
         }
     });
@@ -52,7 +52,7 @@ fn game_versions() {
         let versions = e::game_versions(&CLIENT.0, &CLIENT.1, GAME_MINECRAFT).await;
 
         match &versions {
-            Ok(games) => println!("{:#?}", games),
+            Ok(_games) => (), /* println!("{:#?}", games) */
             Err(error) => panic!("{}", error),
         }
     });
@@ -67,7 +67,7 @@ fn game_version_types() {
         let games = e::games(&CLIENT.0, &CLIENT.1, &params).await;
 
         match &games {
-            Ok(games) => println!("{:#?}", games),
+            Ok(_games) => (), /* println!("{:#?}", games) */
             Err(error) => panic!("{}", error),
         }
     });
@@ -82,7 +82,7 @@ fn categories() {
         let categories = e::categories(&CLIENT.0, &CLIENT.1, &params).await;
 
         match &categories {
-            Ok(categories) => println!("{:#?}", categories),
+            Ok(_categories) => (), /* println!("{:#?}", categories) */
             Err(error) => panic!("{}", error),
         }
     });
@@ -98,7 +98,7 @@ fn search_projects() {
         let result = e::search_projects(&CLIENT.0, &CLIENT.1, &params).await;
 
         match &result {
-            Ok(response) => println!("{:#?}", response),
+            Ok(_response) => (), /* println!("{:#?}", response) */
             Err(error) => panic!("{}", error),
         }
     });
@@ -112,8 +112,8 @@ fn search_projects_iter() {
     smol::block_on(async {
         let projects = sample_search_projects(GAME_MINECRAFT, usize::MAX).await;
 
-        for project in projects {
-            println!("{:#?}", project);
+        for _project in projects {
+            () /* println!("{:#?}", project) */;
         }
     });
 }
@@ -130,7 +130,7 @@ fn project() {
             let result = e::project(&CLIENT.0, &CLIENT.1, project).await;
 
             match result {
-                Ok(project) => println!("{:#?}", project),
+                Ok(_project) => (), /* println!("{:#?}", project) */
                 Err(error) => panic!("{}", error),
             }
         }
@@ -148,7 +148,7 @@ fn projects() {
         let result = e::projects(&CLIENT.0, &CLIENT.1, project_ids).await;
 
         match result {
-            Ok(projects) => println!("{:#?}", projects),
+            Ok(_projects) => (), /* println!("{:#?}", projects) */
             Err(error) => panic!("{}", error),
         }
     });
@@ -163,7 +163,7 @@ fn featured_projects() {
         let result = e::featured_projects(&CLIENT.0, &CLIENT.1, &body).await;
 
         match result {
-            Ok(featured) => println!("{:#?}", featured),
+            Ok(_featured) => (), /* println!("{:#?}", featured) */
             Err(error) => panic!("{}", error),
         }
     });
@@ -211,8 +211,8 @@ fn project_file() {
                 let result = e::project_file(&CLIENT.0, &CLIENT.1, project, file).await;
 
                 match result {
-                    Ok(file) => println!("{:#?}", file),
-                    Err(error) => panic!("{:#?}", error),
+                    Ok(_file) => (), /* println!("{:#?}", file) */
+                    Err(error) => panic!("{}", error),
                 }
             }
         }
@@ -231,8 +231,8 @@ fn project_file_by_id() {
             let result = e::project_file_by_id(&CLIENT.0, &CLIENT.1, file).await;
 
             match result {
-                Ok(file) => println!("{:#?}", file),
-                Err(error) => panic!("{:#?}", error),
+                Ok(_file) => (), /* println!("{:#?}", file) */
+                Err(error) => panic!("{}", error),
             }
         }
     });
@@ -252,7 +252,7 @@ fn project_files() {
             let result = e::project_files(&CLIENT.0, &CLIENT.1, project, &params).await;
 
             match result {
-                Ok(projects) => println!("{:#?}", projects),
+                Ok(_projects) => (), /* println!("{:#?}", projects) */
                 Err(error) => panic!("{}", error),
             }
         }
@@ -278,7 +278,7 @@ fn project_files_iter() {
 
             while let Some(result) = files.next().await {
                 match result {
-                    Ok(file) => println!("{:#?}", file),
+                    Ok(_file) => (), /* println!("{:#?}", file) */
                     Err(error) => panic!("{}", error),
                 }
             }
@@ -299,8 +299,8 @@ fn project_files_by_ids() {
 
         match result {
             Ok(files) => {
-                for file in files {
-                    println!("{:#?}", file);
+                for _file in files {
+                    () /* println!("{:#?}", file) */;
                 }
             }
             Err(error) => panic!("{}", error),
@@ -378,7 +378,7 @@ async fn sample_search_projects(game_id: i32, amount: usize) -> Vec<Project> {
 
         match result {
             Ok(project) => projects.extend([project]),
-            Err(error) => panic!("{:#?}", error),
+            Err(error) => panic!("{}", error),
         }
 
         count += 1;

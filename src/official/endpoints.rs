@@ -90,13 +90,12 @@ macro_rules! endpoint {
         use futures_lite::io::AsyncReadExt;
 
         #[allow(unused_mut)]
-        let mut url = endpoint!(@uri, $base, $path $(, [$($var),*])?);
-
-        $(url.set_query(Some(&serde_qs::to_string($params).unwrap()));)?
+        let mut uri = endpoint!(@uri, $base, $path $(, [$($var),*])?);
+        $(uri.set_query(Some(&serde_qs::to_string($params).unwrap()));)?
 
         let builder = isahc::Request::builder()
             .method(endpoint!(@str $method))
-            .uri(url.as_str());
+            .uri(uri.as_str());
         let request = endpoint!(@build, builder $(, $body)?)?;
 
         let response = $client.send_async(request).await?;
@@ -108,7 +107,7 @@ macro_rules! endpoint {
         let result = serde_path_to_error::deserialize(jd);
         match result {
             Ok(value) => Ok(ApiResponse { bytes, value }),
-            Err(error) => Err(Error::Parsing { error, bytes: Box::new(bytes) }),
+            Err(error) => Err(Error::Parsing { uri, error, bytes: Box::new(bytes) }),
         }
     }};
     (@uri, $base:ident, $path:literal) => {
