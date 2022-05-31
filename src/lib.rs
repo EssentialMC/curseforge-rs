@@ -98,7 +98,7 @@ impl Debug for Error {
     fn fmt(&self, fmt: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             Error::Parsing { error, bytes } => {
-                write!(fmt, "there was an error parsing a response\n{}", error)?;
+                writeln!(fmt, "there was an error parsing a response\n{}", error)?;
                 write!(fmt, "the response was:\n{}", String::from_utf8_lossy(bytes))
             }
             Error::Request(error) => write!(
