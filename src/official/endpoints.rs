@@ -105,11 +105,12 @@ macro_rules! endpoint {
         response.into_body().read_to_end(&mut bytes).await.unwrap();
 
         if status != 200 {
-            return Err(Error::StatusNotOk { uri, status, bytes });
+            return Err(Error::StatusNotOk { uri, status, bytes: Box::new(bytes) });
         }
 
         let jd = &mut serde_json::Deserializer::from_slice(bytes.as_slice());
         let result = serde_path_to_error::deserialize(jd);
+
         match result {
             Ok(value) => Ok(ApiResponse { bytes, value }),
             Err(error) => Err(Error::Deserialize { uri, error, bytes: Box::new(bytes) }),

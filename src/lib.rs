@@ -87,7 +87,7 @@ pub enum Error {
     StatusNotOk {
         uri: url::Url,
         status: isahc::http::StatusCode,
-        bytes: Vec<u8>,
+        bytes: Box<Vec<u8>>,
     },
     #[error("there was an error constructing the request\n{0}")]
     Http(#[from] isahc::http::Error),
