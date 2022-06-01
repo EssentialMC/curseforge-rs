@@ -53,7 +53,8 @@ pub(crate) mod params {
         pub search_filter: Option<String>,
         pub sort_field: Option<SearchSort>,
         pub sort_order: Option<SearchSortOrder>,
-        pub mod_loader_type: Option<ModLoaderType>,
+        #[serde(rename = "modLoaderType")]
+        pub mod_loader: Option<ModLoaderType>,
         pub game_version_type_id: Option<i32>,
         pub slug: Option<String>,
         pub index: Option<i32>,
@@ -70,7 +71,7 @@ pub(crate) mod params {
                 search_filter: None,
                 sort_field: None,
                 sort_order: None,
-                mod_loader_type: None,
+                mod_loader: None,
                 game_version_type_id: None,
                 slug: None,
                 index: None,
@@ -109,7 +110,8 @@ pub(crate) mod params {
     #[serde(rename_all = "camelCase")]
     pub struct ProjectFilesParams {
         pub game_version: Option<String>,
-        pub mod_loader_type: Option<ModLoaderType>,
+        #[serde(rename = "modLoaderType")]
+        pub mod_loader: Option<ModLoaderType>,
         pub game_version_type_id: Option<i32>,
         pub index: Option<i32>,
         pub page_size: Option<i32>,

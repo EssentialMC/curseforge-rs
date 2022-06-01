@@ -23,7 +23,7 @@ pub struct ProjectFile {
     pub file_date: DateTime<Utc>,
     pub file_length: i64,
     pub download_count: i64,
-    pub download_url: String,
+    pub download_url: Option<String>,
     pub game_versions: Vec<String>,
     pub sortable_game_versions: Vec<SortableGameVersion>,
     pub dependencies: Vec<FileDependency>,
