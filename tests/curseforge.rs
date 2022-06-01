@@ -132,12 +132,12 @@ fn search_projects_iter() {
     assert!(!SAMPLE_PROJECTS.is_empty())
 }
 
-/// Example performs a request for the data from the first 1000 projects
+/// Example performs a request for the data from the first 500 projects
 /// returned from a sample search, by their ID.
 #[test]
 fn project() {
     smol::block_on(async {
-        let projects = &SAMPLE_PROJECTS[..1000];
+        let projects = &SAMPLE_PROJECTS[..500];
         let project_ids = projects.iter().map(|project| project.id);
 
         for project in project_ids {
@@ -318,13 +318,13 @@ fn project_files_by_ids() {
 }
 
 /// Example performs a request to get file changelogs for the main file for each
-/// project returned from a sample search of the first 3000 projects.
+/// project returned from a sample search of the first 500 projects.
 #[test]
 fn project_file_changelog() {
     use std::collections::HashMap;
 
     smol::block_on(async {
-        let projects = &SAMPLE_PROJECTS[..3000];
+        let projects = &SAMPLE_PROJECTS[..500];
         let project_files = projects
             .iter()
             .map(|project| (project.id, project.main_file_id))
@@ -343,11 +343,11 @@ fn project_file_changelog() {
 }
 
 /// Example performs a request to get file changelogs for the main file for each
-/// project returned from a sample search of the first 3000 projects.
+/// project returned from a sample search of the first 500 projects.
 #[test]
 fn project_file_download_url() {
     smol::block_on(async {
-        let projects = &SAMPLE_PROJECTS[..3000];
+        let projects = &SAMPLE_PROJECTS[..500];
         let projects_files = projects.iter().filter_map(|project| {
             if let Some(false) = project.allow_mod_distribution {
                 None
