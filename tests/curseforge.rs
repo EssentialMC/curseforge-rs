@@ -304,7 +304,7 @@ fn project_files_by_ids() {
         let file_ids = projects.iter().map(|project| project.main_file_id);
 
         let result = e::project_files_by_ids(&CLIENT, &API_BASE, file_ids).await;
-        let result = result.map(|files| files.into_value().data);
+        let result = result.map(|r| r.into_value().data);
 
         match result {
             Ok(_files) => {
@@ -332,7 +332,7 @@ fn project_file_changelog() {
 
         for (project, file) in project_files.into_iter() {
             let result = e::project_file_changelog(&CLIENT, &API_BASE, project, file).await;
-            let result = result.map(|changelog| changelog.into_value().data);
+            let result = result.map(|r| r.into_value().data);
 
             match result {
                 Ok(_changelog) => (), /* println!("{}", changelog) */
@@ -358,7 +358,7 @@ fn project_file_download_url() {
 
         for (project, file) in projects_files {
             let result = e::project_file_download_url(&CLIENT, &API_BASE, project, file).await;
-            let result = result.map(|url| url.into_value().data);
+            let result = result.map(|r| r.into_value().data);
 
             match result {
                 Ok(_download) => (), /* println!("{}", download) */

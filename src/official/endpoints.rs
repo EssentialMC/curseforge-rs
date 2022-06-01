@@ -1,9 +1,6 @@
 //! Contains methods that take an [`isahc::HttpClient`] and make a request
 //! to a CurseForge endpoint.
 
-use std::fmt::Debug;
-use std::ops::{Deref, DerefMut};
-
 use crate::official::request::pagination::{
     GamesDelegate, GamesStream, ProjectFilesDelegate, ProjectFilesStream, ProjectSearchDelegate,
     ProjectSearchStream,
@@ -12,7 +9,7 @@ use crate::official::request::params::{
     several_body, CategoriesParams, FeaturedProjectsBody, GamesParams, ProjectFilesParams,
     ProjectSearchParams,
 };
-use crate::official::request::response::{DataResponse, PaginatedDataResponse};
+use crate::official::request::{ApiDataResult, ApiPageResult, ApiResponse, DataResponse};
 use crate::official::types::{
     Category, FeaturedProjects, Game, GameVersionType, GameVersions, Project, ProjectFile,
 };
@@ -25,59 +22,6 @@ pub const DEFAULT_API_BASE: &str = "https://api.curseforge.com/v1/";
 /// returned from any paginated request. Refer to the
 /// [documentation](https://docs.curseforge.com/#pagination-limits) for more information.
 pub const API_PAGINATION_RESULTS_LIMIT: usize = 10_000;
-
-#[derive(Debug)]
-pub struct ApiResponse<T> {
-    bytes: Vec<u8>,
-    value: T,
-}
-
-impl<T> ApiResponse<T> {
-    pub fn get_bytes(&self) -> &[u8] {
-        &self.bytes
-    }
-
-    pub fn get_bytes_mut(&mut self) -> &mut [u8] {
-        &mut self.bytes
-    }
-
-    pub fn get_value(&self) -> &T {
-        &self.value
-    }
-
-    pub fn get_value_mut(&mut self) -> &mut T {
-        &mut self.value
-    }
-
-    pub fn into_bytes(self) -> Vec<u8> {
-        self.bytes
-    }
-
-    pub fn into_value(self) -> T {
-        self.value
-    }
-
-    pub fn into_bytes_value(self) -> (Vec<u8>, T) {
-        (self.bytes, self.value)
-    }
-}
-
-impl<T> Deref for ApiResponse<T> {
-    type Target = T;
-
-    fn deref(&self) -> &Self::Target {
-        &self.value
-    }
-}
-
-impl<T> DerefMut for ApiResponse<T> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.value
-    }
-}
-
-pub type ApiDataResult<T> = Result<ApiResponse<DataResponse<T>>, Error>;
-pub type ApiPageResult<T> = Result<ApiResponse<PaginatedDataResponse<T>>, Error>;
 
 macro_rules! endpoint {
     (

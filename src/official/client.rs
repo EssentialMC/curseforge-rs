@@ -12,14 +12,6 @@ use crate::official::types::{
 };
 use crate::Error;
 
-/// This is the official CurseForge Core API base URL.
-/// You must pass it to constructors explicitly.
-pub const DEFAULT_API_BASE: &str = "https://api.curseforge.com/v1/";
-/// The CurseForge API has a maximum limit of 10,000 results that can be
-/// returned from any paginated request. Refer to the
-/// [documentation](https://docs.curseforge.com/#pagination-limits) for more information.
-pub const API_PAGINATION_RESULTS_LIMIT: usize = 10_000;
-
 /// This structure wraps an [`isahc::HttpClient`] and implements methods to
 /// easily make requests to various API endpoints.
 #[derive(Clone, Debug)]
@@ -30,7 +22,7 @@ pub struct Client {
 
 impl Client {
     /// Constructs a client for the CurseForge Core API, given an
-    /// API base URL (use [`DEFAULT_API_BASE`] if not using a proxy)
+    /// API base URL (use [`e::DEFAULT_API_BASE`] if not using a proxy)
     /// and an optional token for authentication (required without a proxy).
     pub fn new<U>(base: U, token: Option<String>) -> Result<Self, Error>
     where
@@ -61,14 +53,14 @@ impl Client {
     pub async fn game(&self, game_id: i32) -> Result<Game, Error> {
         e::game(&self.inner, &self.base, game_id)
             .await
-            .map(|r| r.into_value().data)
+            .map(|r| r.value.data)
     }
 
     /// [`e::games`]
     pub async fn games(&self, params: &GamesParams) -> Result<PaginatedDataResponse<Game>, Error> {
         e::games(&self.inner, &self.base, params)
             .await
-            .map(|r| r.into_value())
+            .map(|r| r.value)
     }
 
     /// [`e::games_iter`]
@@ -80,21 +72,21 @@ impl Client {
     pub async fn game_versions(&self, game_id: i32) -> Result<Vec<GameVersions>, Error> {
         e::game_versions(&self.inner, &self.base, game_id)
             .await
-            .map(|r| r.into_value().data)
+            .map(|r| r.value.data)
     }
 
     /// [`e::game_version_types`]
     pub async fn game_version_types(&self, game_id: i32) -> Result<Vec<GameVersionType>, Error> {
         e::game_version_types(&self.inner, &self.base, game_id)
             .await
-            .map(|r| r.into_value().data)
+            .map(|r| r.value.data)
     }
 
     /// [`e::categories`]
     pub async fn categories(&self, params: &CategoriesParams) -> Result<Vec<Category>, Error> {
         e::categories(&self.inner, &self.base, params)
             .await
-            .map(|r| r.into_value().data)
+            .map(|r| r.value.data)
     }
 
     /// [`e::search_projects`]
@@ -104,7 +96,7 @@ impl Client {
     ) -> Result<PaginatedDataResponse<Project>, Error> {
         e::search_projects(&self.inner, &self.base, params)
             .await
-            .map(|r| r.into_value())
+            .map(|r| r.value)
     }
 
     /// [`e::search_projects_iter`]
@@ -116,7 +108,7 @@ impl Client {
     pub async fn project(&self, project_id: i32) -> Result<Project, Error> {
         e::project(&self.inner, &self.base, project_id)
             .await
-            .map(|r| r.into_value().data)
+            .map(|r| r.value.data)
     }
 
     /// [`e::projects`]
@@ -126,7 +118,7 @@ impl Client {
     {
         e::projects(&self.inner, &self.base, project_ids)
             .await
-            .map(|r| r.into_value().data)
+            .map(|r| r.value.data)
     }
 
     /// [`e::featured_projects`]
@@ -136,28 +128,28 @@ impl Client {
     ) -> Result<FeaturedProjects, Error> {
         e::featured_projects(&self.inner, &self.base, body)
             .await
-            .map(|r| r.into_value().data)
+            .map(|r| r.value.data)
     }
 
     /// [`e::project_description`]
     pub async fn project_description(&self, project_id: i32) -> Result<String, Error> {
         e::project_description(&self.inner, &self.base, project_id)
             .await
-            .map(|r| r.into_value().data)
+            .map(|r| r.value.data)
     }
 
     /// [`e::project_file`]
     pub async fn project_file(&self, project_id: i32, file_id: i32) -> Result<ProjectFile, Error> {
         e::project_file(&self.inner, &self.base, project_id, file_id)
             .await
-            .map(|r| r.into_value().data)
+            .map(|r| r.value.data)
     }
 
     /// [`e::project_file_by_id`]
     pub async fn project_file_by_id(&self, file_id: i32) -> Result<ProjectFile, Error> {
         e::project_files_by_ids(&self.inner, &self.base, [file_id])
             .await
-            .map(|r| r.into_value().pop().unwrap())
+            .map(|mut r| r.value.pop().unwrap())
     }
 
     /// [`e::project_files`]
@@ -168,7 +160,7 @@ impl Client {
     ) -> Result<PaginatedDataResponse<ProjectFile>, Error> {
         e::project_files(&self.inner, &self.base, project_id, params)
             .await
-            .map(|r| r.into_value())
+            .map(|r| r.value)
     }
 
     /// [`e::project_files_iter`]
@@ -187,7 +179,7 @@ impl Client {
     {
         e::project_files_by_ids(&self.inner, &self.base, file_ids)
             .await
-            .map(|r| r.into_value().data)
+            .map(|r| r.value.data)
     }
 
     /// [`e::project_file_changelog`]
@@ -198,7 +190,7 @@ impl Client {
     ) -> Result<String, Error> {
         e::project_file_changelog(&self.inner, &self.base, project_id, file_id)
             .await
-            .map(|r| r.into_value().data)
+            .map(|r| r.value.data)
     }
 
     /// [`e::project_file_download_url`]
@@ -209,6 +201,6 @@ impl Client {
     ) -> Result<String, Error> {
         e::project_file_download_url(&self.inner, &self.base, project_id, file_id)
             .await
-            .map(|r| r.into_value().data)
+            .map(|r| r.value.data)
     }
 }

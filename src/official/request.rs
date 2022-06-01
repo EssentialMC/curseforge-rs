@@ -258,14 +258,67 @@ pub(crate) mod response {
         #[serde(flatten)]
         pub other_fields: serde_json::Value,
     }
+
+    #[derive(Debug)]
+    pub struct ApiResponse<T> {
+        pub(crate) bytes: Vec<u8>,
+        pub(crate) value: T,
+    }
+
+    impl<T> ApiResponse<T> {
+        pub fn get_bytes(&self) -> &[u8] {
+            &self.bytes
+        }
+
+        pub fn get_bytes_mut(&mut self) -> &mut [u8] {
+            &mut self.bytes
+        }
+
+        pub fn get_value(&self) -> &T {
+            &self.value
+        }
+
+        pub fn get_value_mut(&mut self) -> &mut T {
+            &mut self.value
+        }
+
+        pub fn into_bytes(self) -> Vec<u8> {
+            self.bytes
+        }
+
+        pub fn into_value(self) -> T {
+            self.value
+        }
+
+        pub fn into_bytes_value(self) -> (Vec<u8>, T) {
+            (self.bytes, self.value)
+        }
+    }
+
+    impl<T> Deref for ApiResponse<T> {
+        type Target = T;
+
+        fn deref(&self) -> &Self::Target {
+            &self.value
+        }
+    }
+
+    impl<T> DerefMut for ApiResponse<T> {
+        fn deref_mut(&mut self) -> &mut Self::Target {
+            &mut self.value
+        }
+    }
+
+    pub type ApiDataResult<T> = Result<ApiResponse<DataResponse<T>>, crate::Error>;
+    pub type ApiPageResult<T> = Result<ApiResponse<PaginatedDataResponse<T>>, crate::Error>;
 }
 
 pub(crate) mod pagination {
     use async_trait::async_trait;
     use awaur::paginator::{PaginatedStream, PaginationDelegate};
 
-    use super::client::API_PAGINATION_RESULTS_LIMIT;
     use super::endpoints as e;
+    use super::endpoints::API_PAGINATION_RESULTS_LIMIT;
     use super::params::{GamesParams, ProjectFilesParams, ProjectSearchParams};
     use super::types::{Game, Pagination, Project, ProjectFile};
     use crate::Error;
@@ -289,6 +342,8 @@ pub(crate) mod pagination {
             }
 
             impl<'cu> $name<'cu> {
+                /// Constructs a new implementor of [`PaginationDelegate`]
+                /// provided references to an [`isahc::HttpClient`] and a base URL.
                 pub fn new(
                     client: &'cu isahc::HttpClient,
                     base: &'cu url::Url,
