@@ -25,7 +25,7 @@ pub const API_PAGINATION_RESULTS_LIMIT: usize = 10_000;
 
 macro_rules! endpoint {
     (
-        $client:ident $method:ident
+        $client:ident $method:ident,
         uri: $base:ident / $path:literal,
         $(vars: [$($var:ident),+],)?
         $(params: $params:expr,)?
@@ -87,7 +87,7 @@ pub async fn game(
     game_id: i32,
 ) -> ApiDataResult<Game> {
     endpoint! {
-        client GET
+        client GET,
         uri: base / "games/{}",
         vars: [game_id],
     }
@@ -100,7 +100,7 @@ pub async fn games(
     params: &GamesParams,
 ) -> ApiPageResult<Game> {
     endpoint! {
-        client GET
+        client GET,
         uri: base / "games",
         params: params,
     }
@@ -122,7 +122,7 @@ pub async fn game_versions(
     game_id: i32,
 ) -> ApiDataResult<Vec<GameVersions>> {
     endpoint! {
-        client GET
+        client GET,
         uri: base / "games/{}/versions",
         vars: [game_id],
     }
@@ -135,7 +135,7 @@ pub async fn game_version_types(
     game_id: i32,
 ) -> ApiDataResult<Vec<GameVersionType>> {
     endpoint! {
-        client GET
+        client GET,
         uri: base / "games/{}/version-types",
         vars: [game_id],
     }
@@ -148,7 +148,7 @@ pub async fn categories(
     params: &CategoriesParams,
 ) -> ApiDataResult<Vec<Category>> {
     endpoint! {
-        client GET
+        client GET,
         uri: base / "categories",
         params: params,
     }
@@ -161,7 +161,7 @@ pub async fn search_projects(
     params: &ProjectSearchParams,
 ) -> ApiPageResult<Project> {
     endpoint! {
-        client GET
+        client GET,
         uri: base / "mods/search",
         params: params,
     }
@@ -190,7 +190,7 @@ pub async fn project(
     project_id: i32,
 ) -> ApiDataResult<Project> {
     endpoint! {
-        client GET
+        client GET,
         uri: base / "mods/{}",
         vars: [project_id],
     }
@@ -206,7 +206,7 @@ where
     I: IntoIterator<Item = i32>,
 {
     endpoint! {
-        client POST
+        client POST,
         uri: base / "mods",
         body: &several_body!("modIds", i32, project_ids.into_iter()),
     }
@@ -219,7 +219,7 @@ pub async fn featured_projects(
     body: &FeaturedProjectsBody,
 ) -> ApiDataResult<FeaturedProjects> {
     endpoint! {
-        client POST
+        client POST,
         uri: base / "mods/featured",
         body: body,
     }
@@ -232,7 +232,7 @@ pub async fn project_description(
     project_id: i32,
 ) -> ApiDataResult<String> {
     endpoint! {
-        client GET
+        client GET,
         uri: base / "mods/{}/description",
         vars: [project_id],
     }
@@ -246,7 +246,7 @@ pub async fn project_file(
     file_id: i32,
 ) -> ApiDataResult<ProjectFile> {
     endpoint! {
-        client GET
+        client GET,
         uri: base / "mods/{}/files/{}",
         vars: [project_id, file_id],
     }
@@ -281,7 +281,7 @@ pub async fn project_files(
     params: &ProjectFilesParams,
 ) -> ApiPageResult<ProjectFile> {
     endpoint! {
-        client GET
+        client GET,
         uri: base / "mods/{}/files",
         vars: [project_id],
         params: params,
@@ -312,7 +312,7 @@ where
     I: IntoIterator<Item = i32>,
 {
     endpoint! {
-        client POST
+        client POST,
         uri: base / "mods/files",
         body: &several_body!("fileIds", i32, file_ids.into_iter()),
     }
@@ -326,7 +326,7 @@ pub async fn project_file_changelog(
     file_id: i32,
 ) -> ApiDataResult<String> {
     endpoint! {
-        client GET
+        client GET,
         uri: base / "mods/{}/files/{}/changelog",
         vars: [project_id, file_id],
     }
@@ -340,7 +340,7 @@ pub async fn project_file_download_url(
     file_id: i32,
 ) -> ApiDataResult<String> {
     endpoint! {
-        client GET
+        client GET,
         uri: base / "mods/{}/files/{}/download-url",
         vars: [project_id, file_id],
     }

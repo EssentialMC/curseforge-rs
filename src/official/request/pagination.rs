@@ -5,7 +5,6 @@ use super::params::{GamesParams, ProjectFilesParams, ProjectSearchParams};
 use crate::official::endpoints as e;
 use crate::official::endpoints::API_PAGINATION_RESULTS_LIMIT;
 use crate::official::types::{Game, Pagination, Project, ProjectFile};
-use crate::Error;
 
 macro_rules! pagination_delegate {
     (
@@ -49,7 +48,7 @@ macro_rules! pagination_delegate {
         #[async_trait]
         impl PaginationDelegate for $name<'_> {
             type Item = $item;
-            type Error = Error;
+            type Error = crate::Error;
 
             async fn next_page(&mut self) -> Result<Vec<Self::Item>, Self::Error> {
                 let result = $pager(
