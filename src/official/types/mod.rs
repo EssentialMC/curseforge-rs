@@ -25,6 +25,8 @@
 //!   deserialize what is expected. Deserializing enumeration variants will
 //!   still fail if the API returns something unexpected.
 
+#![allow(missing_docs)]
+
 pub(crate) mod categories;
 pub(crate) mod core;
 pub(crate) mod files;

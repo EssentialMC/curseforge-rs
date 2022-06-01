@@ -51,6 +51,7 @@
 //! ```
 
 #![cfg_attr(doc, feature(doc_auto_cfg))]
+#![warn(missing_docs)]
 
 #[cfg(all(feature = "allow-unknown-fields", feature = "deny-unknown-fields"))]
 compile_error!(
