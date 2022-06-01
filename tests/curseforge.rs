@@ -1,26 +1,46 @@
 use curseforge::official::prelude::*;
 use once_cell::sync::Lazy;
 
-static CLIENT: Lazy<(isahc::HttpClient, url::Url)> = Lazy::new(|| {
-    (
-        isahc::HttpClient::builder()
-            .default_header("content-type", "application/json")
-            .default_header("accept", "application/json")
-            .build()
-            .unwrap(),
-        API_BASE.parse().unwrap(),
-    )
-});
-
-const API_BASE: &str = "https://cfproxy.fly.dev/v1/";
+static API_BASE: Lazy<url::Url> = Lazy::new(|| "https://cfproxy.fly.dev/v1/".parse().unwrap());
 const GAME_TERRARIA: i32 = 431;
 const GAME_MINECRAFT: i32 = 432;
+
+static CLIENT: Lazy<isahc::HttpClient> = Lazy::new(|| {
+    isahc::HttpClient::builder()
+        .max_connections_per_host(10)
+        .default_header("content-type", "application/json")
+        .default_header("accept", "application/json")
+        .build()
+        .unwrap()
+});
+
+static SAMPLE_PROJECTS: Lazy<Vec<Project>> = Lazy::new(|| {
+    smol::block_on(async {
+        use smol::pin;
+        use smol::stream::StreamExt;
+
+        let params = ProjectSearchParams::game(GAME_MINECRAFT);
+        let search = e::search_projects_iter(&CLIENT, &API_BASE, params);
+        pin!(search);
+
+        let mut projects = Vec::new();
+
+        while let Some(result) = search.next().await {
+            match result {
+                Ok(project) => projects.extend([project]),
+                Err(error) => panic!("{}", error),
+            }
+        }
+
+        projects
+    })
+});
 
 /// Example performs a request for the data for a specific game by ID.
 #[test]
 fn game() {
     smol::block_on(async {
-        let game = e::game(&CLIENT.0, &CLIENT.1, GAME_TERRARIA).await;
+        let game = e::game(&CLIENT, &API_BASE, GAME_TERRARIA).await;
 
         match &game {
             Ok(_game) => (), /* println!("{:#?}", game) */
@@ -34,7 +54,7 @@ fn game() {
 fn games() {
     smol::block_on(async {
         let params = GamesParams::default();
-        let games = e::games(&CLIENT.0, &CLIENT.1, &params).await;
+        let games = e::games(&CLIENT, &API_BASE, &params).await;
 
         match &games {
             Ok(_games) => (), /* println!("{:#?}", games) */
@@ -49,7 +69,7 @@ fn games() {
 #[test]
 fn game_versions() {
     smol::block_on(async {
-        let versions = e::game_versions(&CLIENT.0, &CLIENT.1, GAME_MINECRAFT).await;
+        let versions = e::game_versions(&CLIENT, &API_BASE, GAME_MINECRAFT).await;
 
         match &versions {
             Ok(_games) => (), /* println!("{:#?}", games) */
@@ -64,7 +84,7 @@ fn game_versions() {
 fn game_version_types() {
     smol::block_on(async {
         let params = GamesParams::default();
-        let games = e::games(&CLIENT.0, &CLIENT.1, &params).await;
+        let games = e::games(&CLIENT, &API_BASE, &params).await;
 
         match &games {
             Ok(_games) => (), /* println!("{:#?}", games) */
@@ -79,7 +99,7 @@ fn game_version_types() {
 fn categories() {
     smol::block_on(async {
         let params = CategoriesParams::game(GAME_MINECRAFT);
-        let categories = e::categories(&CLIENT.0, &CLIENT.1, &params).await;
+        let categories = e::categories(&CLIENT, &API_BASE, &params).await;
 
         match &categories {
             Ok(_categories) => (), /* println!("{:#?}", categories) */
@@ -95,7 +115,7 @@ fn categories() {
 fn search_projects() {
     smol::block_on(async {
         let params = ProjectSearchParams::game(GAME_MINECRAFT);
-        let result = e::search_projects(&CLIENT.0, &CLIENT.1, &params).await;
+        let result = e::search_projects(&CLIENT, &API_BASE, &params).await;
 
         match &result {
             Ok(_response) => (), /* println!("{:#?}", response) */
@@ -109,13 +129,7 @@ fn search_projects() {
 /// into the wrapper's types as well as the proper usage of `PaginatedStream`.
 #[test]
 fn search_projects_iter() {
-    smol::block_on(async {
-        let projects = sample_search_projects(GAME_MINECRAFT, usize::MAX).await;
-
-        for _project in projects {
-            () /* println!("{:#?}", project) */;
-        }
-    });
+    assert!(!SAMPLE_PROJECTS.is_empty())
 }
 
 /// Example performs a request for the data from the first 1000 projects
@@ -123,11 +137,11 @@ fn search_projects_iter() {
 #[test]
 fn project() {
     smol::block_on(async {
-        let projects = sample_search_projects(GAME_MINECRAFT, 1000).await;
-        let project_ids = projects.into_iter().map(|project| project.id);
+        let projects = &SAMPLE_PROJECTS[..1000];
+        let project_ids = projects.iter().map(|project| project.id);
 
         for project in project_ids {
-            let result = e::project(&CLIENT.0, &CLIENT.1, project).await;
+            let result = e::project(&CLIENT, &API_BASE, project).await;
 
             match result {
                 Ok(_project) => (), /* println!("{:#?}", project) */
@@ -143,9 +157,9 @@ fn project() {
 #[test]
 fn projects() {
     smol::block_on(async {
-        let projects = sample_search_projects(GAME_MINECRAFT, 3000).await;
-        let project_ids = projects.into_iter().map(|project| project.id);
-        let result = e::projects(&CLIENT.0, &CLIENT.1, project_ids).await;
+        let projects = &SAMPLE_PROJECTS[..3000];
+        let project_ids = projects.iter().map(|project| project.id);
+        let result = e::projects(&CLIENT, &API_BASE, project_ids).await;
 
         match result {
             Ok(_projects) => (), /* println!("{:#?}", projects) */
@@ -160,7 +174,7 @@ fn projects() {
 fn featured_projects() {
     smol::block_on(async {
         let body = FeaturedProjectsBody::game(GAME_MINECRAFT);
-        let result = e::featured_projects(&CLIENT.0, &CLIENT.1, &body).await;
+        let result = e::featured_projects(&CLIENT, &API_BASE, &body).await;
 
         match result {
             Ok(_featured) => (), /* println!("{:#?}", featured) */
@@ -174,14 +188,14 @@ fn featured_projects() {
 #[test]
 fn project_description() {
     smol::block_on(async {
-        let projects = sample_search_projects(GAME_MINECRAFT, 150).await;
-        let project_ids = projects.into_iter().map(|project| project.id);
+        let projects = &SAMPLE_PROJECTS[..150];
+        let project_ids = projects.iter().map(|project| project.id);
 
         for project in project_ids {
-            let result = e::project_description(&CLIENT.0, &CLIENT.1, project).await;
+            let result = e::project_description(&CLIENT, &API_BASE, project).await;
             // let result = result.map(|description| description.data);
             match result {
-                Ok(description) => println!("{}", **description),
+                Ok(_description) => (), /* println!("{}", **description) */
                 Err(error) => panic!("{}", error),
             }
         }
@@ -195,20 +209,15 @@ fn project_file() {
     use std::collections::HashMap;
 
     smol::block_on(async {
-        let projects = sample_search_projects(GAME_MINECRAFT, 150).await;
+        let projects = &SAMPLE_PROJECTS[..150];
         let project_files = projects
-            .into_iter()
-            .map(|project| {
-                (
-                    project.id,
-                    project.latest_files.into_iter().map(|file| file.id),
-                )
-            })
+            .iter()
+            .map(|project| (project.id, project.latest_files.iter().map(|file| file.id)))
             .collect::<HashMap<_, _>>();
 
         for (project, files) in project_files.into_iter() {
             for file in files {
-                let result = e::project_file(&CLIENT.0, &CLIENT.1, project, file).await;
+                let result = e::project_file(&CLIENT, &API_BASE, project, file).await;
 
                 match result {
                     Ok(_file) => (), /* println!("{:#?}", file) */
@@ -222,13 +231,13 @@ fn project_file() {
 #[test]
 fn project_file_by_id() {
     smol::block_on(async {
-        let projects = sample_search_projects(GAME_MINECRAFT, 150).await;
+        let projects = &SAMPLE_PROJECTS[..150];
         let files = projects
-            .into_iter()
-            .flat_map(|project| project.latest_files.into_iter().map(|file| file.id));
+            .iter()
+            .flat_map(|project| project.latest_files.iter().map(|file| file.id));
 
         for file in files {
-            let result = e::project_file_by_id(&CLIENT.0, &CLIENT.1, file).await;
+            let result = e::project_file_by_id(&CLIENT, &API_BASE, file).await;
 
             match result {
                 Ok(_file) => (), /* println!("{:#?}", file) */
@@ -245,11 +254,11 @@ fn project_files() {
     smol::block_on(async {
         let params = ProjectFilesParams::default();
 
-        let projects = sample_search_projects(GAME_MINECRAFT, 3000).await;
-        let project_ids = projects.into_iter().map(|project| project.id);
+        let projects = &SAMPLE_PROJECTS[..3000];
+        let project_ids = projects.iter().map(|project| project.id);
 
         for project in project_ids {
-            let result = e::project_files(&CLIENT.0, &CLIENT.1, project, &params).await;
+            let result = e::project_files(&CLIENT, &API_BASE, project, &params).await;
 
             match result {
                 Ok(_projects) => (), /* println!("{:#?}", projects) */
@@ -269,11 +278,11 @@ fn project_files_iter() {
     smol::block_on(async {
         let params = ProjectFilesParams::default();
 
-        let projects = sample_search_projects(GAME_MINECRAFT, 3000).await;
-        let project_ids = projects.into_iter().map(|project| project.id);
+        let projects = &SAMPLE_PROJECTS[..3000];
+        let project_ids = projects.iter().map(|project| project.id);
 
         for project in project_ids {
-            let files = e::project_files_iter(&CLIENT.0, &CLIENT.1, project, params.clone());
+            let files = e::project_files_iter(&CLIENT, &API_BASE, project, params.clone());
             pin!(files);
 
             while let Some(result) = files.next().await {
@@ -291,10 +300,10 @@ fn project_files_iter() {
 #[test]
 fn project_files_by_ids() {
     smol::block_on(async {
-        let projects = sample_search_projects(GAME_MINECRAFT, 3000).await;
-        let file_ids = projects.into_iter().map(|project| project.main_file_id);
+        let projects = &SAMPLE_PROJECTS[..3000];
+        let file_ids = projects.iter().map(|project| project.main_file_id);
 
-        let result = e::project_files_by_ids(&CLIENT.0, &CLIENT.1, file_ids).await;
+        let result = e::project_files_by_ids(&CLIENT, &API_BASE, file_ids).await;
         let result = result.map(|files| files.into_value().data);
 
         match result {
@@ -315,14 +324,14 @@ fn project_file_changelog() {
     use std::collections::HashMap;
 
     smol::block_on(async {
-        let projects = sample_search_projects(GAME_MINECRAFT, 3000).await;
+        let projects = &SAMPLE_PROJECTS[..3000];
         let project_files = projects
-            .into_iter()
+            .iter()
             .map(|project| (project.id, project.main_file_id))
             .collect::<HashMap<_, _>>();
 
         for (project, file) in project_files.into_iter() {
-            let result = e::project_file_changelog(&CLIENT.0, &CLIENT.1, project, file).await;
+            let result = e::project_file_changelog(&CLIENT, &API_BASE, project, file).await;
             let result = result.map(|changelog| changelog.into_value().data);
 
             match result {
@@ -337,51 +346,24 @@ fn project_file_changelog() {
 /// project returned from a sample search of the first 3000 projects.
 #[test]
 fn project_file_download_url() {
-    use std::collections::HashMap;
-
     smol::block_on(async {
-        let projects = sample_search_projects(GAME_MINECRAFT, 3000).await;
-        let project_files = projects
-            .into_iter()
-            .map(|project| (project.id, project.main_file_id))
-            .collect::<HashMap<_, _>>();
+        let projects = &SAMPLE_PROJECTS[..3000];
+        let projects_files = projects.iter().filter_map(|project| {
+            if let Some(false) = project.allow_mod_distribution {
+                None
+            } else {
+                Some((project.id, project.main_file_id))
+            }
+        });
 
-        for (project, file) in project_files.into_iter() {
-            let result = e::project_file_download_url(&CLIENT.0, &CLIENT.1, project, file).await;
+        for (project, file) in projects_files {
+            let result = e::project_file_download_url(&CLIENT, &API_BASE, project, file).await;
             let result = result.map(|url| url.into_value().data);
 
             match result {
                 Ok(_download) => (), /* println!("{}", download) */
+                Err(error) => panic!("{}", error),
             }
         }
     });
-}
-
-/// Utility function to reduce duplication. Many tests require data from
-/// projects so this performs the necessary search to acquire sample data.
-async fn sample_search_projects(game_id: i32, amount: usize) -> Vec<Project> {
-    use smol::pin;
-    use smol::stream::StreamExt;
-
-    let params = ProjectSearchParams::game(game_id);
-    let search = e::search_projects_iter(&CLIENT.0, &CLIENT.1, params);
-    pin!(search);
-
-    let mut count = 0_usize;
-    let mut projects = Vec::new();
-
-    while let Some(result) = search.next().await {
-        if count >= amount {
-            break;
-        }
-
-        match result {
-            Ok(project) => projects.extend([project]),
-            Err(error) => panic!("{}", error),
-        }
-
-        count += 1;
-    }
-
-    projects
 }
