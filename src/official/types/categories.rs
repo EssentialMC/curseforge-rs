@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
-use super::fixes::nullable_datetime;
+use super::fixes::deserialize_nullable_datetime;
 
 /// <https://docs.curseforge.com/#tocS_Category>
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -14,7 +14,7 @@ pub struct Category {
     pub slug: Option<String>,
     pub url: Option<String>,
     pub icon_url: String,
-    #[serde(deserialize_with = "nullable_datetime")]
+    #[serde(deserialize_with = "deserialize_nullable_datetime")]
     pub date_modified: Option<DateTime<Utc>>,
     pub is_class: Option<bool>,
     #[serde(default)]

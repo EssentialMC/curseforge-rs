@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 
 use super::core::{CoreApiStatus, CoreStatus};
-use super::fixes::nullable_string;
+use super::fixes::deserialize_nullable_string;
 
 /// <https://docs.curseforge.com/#tocS_Game>
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -26,11 +26,11 @@ pub struct Game {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "deny-unknown-fields", serde(deny_unknown_fields))]
 pub struct GameAssets {
-    #[serde(deserialize_with = "nullable_string")]
+    #[serde(deserialize_with = "deserialize_nullable_string")]
     pub icon_url: Option<String>,
-    #[serde(deserialize_with = "nullable_string")]
+    #[serde(deserialize_with = "deserialize_nullable_string")]
     pub tile_url: Option<String>,
-    #[serde(deserialize_with = "nullable_string")]
+    #[serde(deserialize_with = "deserialize_nullable_string")]
     pub cover_url: Option<String>,
     #[cfg(feature = "allow-unknown-fields")]
     #[serde(flatten)]
