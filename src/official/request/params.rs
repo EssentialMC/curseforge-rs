@@ -22,6 +22,7 @@ pub struct CategoriesParams {
 }
 
 impl CategoriesParams {
+    /// Instantiate this structure with a `game_id` and no `class_id`.
     pub fn game(game_id: i32) -> Self {
         Self {
             game_id,

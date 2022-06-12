@@ -4,8 +4,10 @@ use std::ops::{Deref, DerefMut};
 use crate::official::types::core::Pagination;
 
 /// Wraps API responses which have the single field `data`.
-/// Methods that make calls to endpoints that return this will unwrap it
-/// and provide the value of `data` directly.
+///
+/// This type dereferences to the inner `T` in the field `data`. [`Client`]
+/// methods that make calls to endpoints returning this type will unwrap the
+/// contents and return the value of `data` directly.
 ///
 /// | [`Client`] Methods            | API Reference                |
 /// | ----------------------------- | ---------------------------- |
@@ -70,6 +72,11 @@ impl<T> DerefMut for DataResponse<T> {
 }
 
 /// Wraps API responses which have the fields `data` and `pagination`.
+///
+/// This type dereferences to the inner `Vec<T>` in the field `data`.
+/// Generally, it is recommended to use methods that end with `_iter` rather
+/// than those that return this type directly, as pagination over the results
+/// can be tricky to get right.
 ///
 /// | [`Client`] Methods       | API Reference            |
 /// | ------------------------ | ------------------------ |

@@ -73,7 +73,7 @@ pub use official::*;
 #[doc(inline)]
 pub use cfwidget::*;
 
-/// The main error type used throughought the crate.
+/// The main error type used throughout the crate.
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
     /// This is the most useful variant. This will be returned if the API
@@ -99,7 +99,7 @@ pub enum Error {
     /// A request to a URI that was expected to return successfully with `200:
     /// OK` has failed to do so. This contains the status code that was recieved
     /// instead, and the bytes in the body of the response.
-    #[error("request was expected to recieve 200 OK but got {status}\nencountered at:\n{uri}")]
+    #[error("response was expected to be status 200 OK but got {status}\nencountered at:\n{uri}")]
     StatusNotOk {
         /// The URI that the initial request was sent to.
         uri: url::Url,
