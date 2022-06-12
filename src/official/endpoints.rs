@@ -17,7 +17,7 @@ use crate::Error;
 
 /// This is the official CurseForge Core API base URL.
 /// You must pass it to constructors explicitly.
-pub const DEFAULT_API_BASE: &str = "https://api.curseforge.com/v1/";
+pub static DEFAULT_API_BASE: &str = "https://api.curseforge.com/v1/";
 /// The CurseForge API has a maximum limit of 10,000 results that can be
 /// returned from any paginated request. Refer to the
 /// [documentation](https://docs.curseforge.com/#pagination-limits) for more information.
@@ -52,8 +52,8 @@ macro_rules! endpoint {
             return Err(Error::StatusNotOk { uri, status, bytes: Box::new(bytes) });
         }
 
-        let jd = &mut serde_json::Deserializer::from_slice(bytes.as_slice());
-        let result = serde_path_to_error::deserialize(jd);
+        let deser = &mut serde_json::Deserializer::from_slice(bytes.as_slice());
+        let result = serde_path_to_error::deserialize(deser);
 
         match result {
             Ok(value) => Ok(ApiResponse { bytes, value }),
