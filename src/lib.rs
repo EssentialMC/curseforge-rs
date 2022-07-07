@@ -50,8 +50,11 @@
 //! $ cargo +nightly doc --features "cfwidget" --features "allow-unknown-fields"
 //! ```
 
-#![cfg_attr(doc, feature(doc_auto_cfg))]
+#![deny(rust_2018_idioms)]
 #![warn(missing_docs)]
+// This enables the small box that indicates when a member is only available
+// through a feature gate.
+#![cfg_attr(doc, feature(doc_auto_cfg))]
 
 #[cfg(all(feature = "allow-unknown-fields", feature = "deny-unknown-fields"))]
 compile_error!(

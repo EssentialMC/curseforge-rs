@@ -56,7 +56,7 @@ pub(crate) mod fixes {
         impl<'de> serde::de::Visitor<'de> for NullableDateTimeVisitor {
             type Value = Option<DateTime<Utc>>;
 
-            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+            fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 formatter.write_str(
                     "a string encoding a datetime, with '0001-01-01T00:00:00' treated as a null \
                      value",
