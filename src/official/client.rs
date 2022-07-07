@@ -64,7 +64,7 @@ impl Client {
     }
 
     /// [`e::games_iter`]
-    pub fn games_iter(&self, params: GamesParams) -> GamesStream {
+    pub fn games_iter<'cu, 'f>(&'cu self, params: GamesParams) -> GamesStream<'cu, 'f> {
         GamesDelegate::new(&self.inner, &self.base, params).into()
     }
 
@@ -100,7 +100,10 @@ impl Client {
     }
 
     /// [`e::search_projects_iter`]
-    pub fn search_projects_iter(&self, params: ProjectSearchParams) -> ProjectSearchStream {
+    pub fn search_projects_iter<'cu, 'f>(
+        &'cu self,
+        params: ProjectSearchParams,
+    ) -> ProjectSearchStream<'cu, 'f> {
         ProjectSearchDelegate::new(&self.inner, &self.base, params).into()
     }
 
@@ -164,11 +167,11 @@ impl Client {
     }
 
     /// [`e::project_files_iter`]
-    pub fn project_files_iter(
-        &self,
+    pub fn project_files_iter<'cu, 'f>(
+        &'cu self,
         project_id: i32,
         params: ProjectFilesParams,
-    ) -> ProjectFilesStream {
+    ) -> ProjectFilesStream<'cu, 'f> {
         ProjectFilesDelegate::new(&self.inner, &self.base, project_id, params).into()
     }
 
