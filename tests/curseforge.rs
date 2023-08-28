@@ -1,7 +1,7 @@
 use curseforge::official::prelude::*;
 use once_cell::sync::Lazy;
 
-static API_BASE: Lazy<url::Url> = Lazy::new(|| "https://cfproxy.fly.dev/v1/".parse().unwrap());
+static API_BASE: Lazy<url::Url> = Lazy::new(|| "https://api.curse.tools/v1/cf/".parse().unwrap());
 const GAME_TERRARIA: i32 = 431;
 const GAME_MINECRAFT: i32 = 432;
 
