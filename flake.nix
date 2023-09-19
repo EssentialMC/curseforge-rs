@@ -22,8 +22,15 @@
           default = pkgs.mkShell {
             strictDeps = true;
 
-            nativeBuildInputs = with pkgs; [
-              rust-bin.stable.latest.default
+            packages = with pkgs; [
+              (lib.hiPrio (rust-bin.stable.latest.minimal.override {
+                extensions = [ "rust-src" "rust-docs" "clippy" ];
+              }))
+              (rust-bin.selectLatestNightlyWith (toolchain:
+                toolchain.minimal.override {
+                  extensions = [ "rustfmt" "rust-analyzer" ];
+                }))
+
               pkg-config
               openssl
             ];
