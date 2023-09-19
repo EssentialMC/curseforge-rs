@@ -16,6 +16,7 @@ pub enum ModLoaderType {
     LiteLoader = 3,
     Fabric = 4,
     Quilt = 5,
+    NeoForge = 6,
     #[cfg(feature = "allow-unknown-fields")]
     #[serde(other)]
     Unknown = u8::MAX,
