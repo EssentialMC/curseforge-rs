@@ -14,7 +14,7 @@ pub use client::Client;
 /// All members defined within this crate are re-exported flatly at this path
 /// for convenience.
 pub mod prelude {
-    pub use super::client::Client;
+    pub use super::client::{Client, ClientOptions};
     pub use super::endpoints as e;
     #[doc(inline)]
     pub use super::endpoints::DEFAULT_API_BASE as CF_DEFAULT_API_BASE;

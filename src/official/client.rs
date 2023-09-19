@@ -20,11 +20,27 @@ pub struct Client {
     base: url::Url,
 }
 
+#[derive(Clone, Debug)]
+pub struct ClientOptions {
+    pub max_connections: usize,
+}
+
+#[allow(clippy::derivable_impls)]
+impl Default for ClientOptions {
+    fn default() -> Self {
+        Self { max_connections: 0 }
+    }
+}
+
 impl Client {
     /// Constructs a client for the CurseForge Core API, given an
     /// API base URL (use [`e::DEFAULT_API_BASE`] if not using a proxy)
     /// and an optional token for authentication (required without a proxy).
-    pub fn new<U>(base: U, token: Option<String>) -> Result<Self, Error>
+    pub fn new<U>(
+        base: U,
+        token: Option<String>,
+        options: Option<&ClientOptions>,
+    ) -> Result<Self, Error>
     where
         U: AsRef<str>,
     {
@@ -32,6 +48,10 @@ impl Client {
 
         builder = builder.default_header("content-type", "application/json");
         builder = builder.default_header("accept", "application/json");
+
+        if let Some(options) = options {
+            builder = builder.max_connections(options.max_connections);
+        }
 
         if let Some(token) = token {
             builder = builder.default_header("x-api-key", token);
