@@ -1,17 +1,32 @@
 use curseforge::official::prelude::*;
 use once_cell::sync::Lazy;
 
-static API_BASE: Lazy<url::Url> = Lazy::new(|| "https://api.curse.tools/v1/cf/".parse().unwrap());
+/// The API base that will be used if a token is not provided.
+/// This is an unofficial proxy that works without a token.
+static PROXY_API_BASE: &str = "https://api.curse.tools/v1/cf/";
+
+/// The name of the environment variable to get the CurseForge token from.
+static TOKEN_VARIABLE: &str = "CURSEFORGE_API_TOKEN";
+
+/// Settings are lowered to reduce API spam.
+static CLIENT_OPTIONS: ClientOptions = ClientOptions {
+    // This is the maximum number of client connections allowed for the host.
+    // Increasing this number may result in denial errors.
+    max_connections: 1,
+};
+
 const GAME_TERRARIA: i32 = 431;
 const GAME_MINECRAFT: i32 = 432;
 
-static CLIENT: Lazy<isahc::HttpClient> = Lazy::new(|| {
-    isahc::HttpClient::builder()
-        .max_connections_per_host(10)
-        .default_header("content-type", "application/json")
-        .default_header("accept", "application/json")
-        .build()
-        .unwrap()
+static CLIENT: Lazy<Client> = Lazy::new(|| match std::env::var(TOKEN_VARIABLE) {
+    Ok(token) => {
+        eprintln!("Using official CurseForge API with token.");
+        Client::new(e::DEFAULT_API_BASE, Some(token), Some(&CLIENT_OPTIONS)).unwrap()
+    }
+    Err(_) => {
+        eprintln!("Using proxy for CurseForge API without token.");
+        Client::new(PROXY_API_BASE, None, Some(&CLIENT_OPTIONS)).unwrap()
+    }
 });
 
 static SAMPLE_PROJECTS: Lazy<Vec<Project>> = Lazy::new(|| {
@@ -20,7 +35,7 @@ static SAMPLE_PROJECTS: Lazy<Vec<Project>> = Lazy::new(|| {
         use smol::stream::StreamExt;
 
         let params = ProjectSearchParams::game(GAME_MINECRAFT);
-        let search = e::search_projects_iter(&CLIENT, &API_BASE, params);
+        let search = CLIENT.search_projects_iter(params);
         pin!(search);
 
         let mut projects = Vec::new();
@@ -40,7 +55,7 @@ static SAMPLE_PROJECTS: Lazy<Vec<Project>> = Lazy::new(|| {
 #[test]
 fn game() {
     smol::block_on(async {
-        let game = e::game(&CLIENT, &API_BASE, GAME_TERRARIA).await;
+        let game = CLIENT.game(GAME_TERRARIA).await;
 
         match &game {
             Ok(_game) => (), /* println!("{:#?}", game) */
@@ -54,7 +69,7 @@ fn game() {
 fn games() {
     smol::block_on(async {
         let params = GamesParams::default();
-        let games = e::games(&CLIENT, &API_BASE, &params).await;
+        let games = CLIENT.games(&params).await;
 
         match &games {
             Ok(_games) => (), /* println!("{:#?}", games) */
@@ -69,7 +84,7 @@ fn games() {
 #[test]
 fn game_versions() {
     smol::block_on(async {
-        let versions = e::game_versions(&CLIENT, &API_BASE, GAME_MINECRAFT).await;
+        let versions = CLIENT.game_versions(GAME_MINECRAFT).await;
 
         match &versions {
             Ok(_games) => (), /* println!("{:#?}", games) */
@@ -84,7 +99,7 @@ fn game_versions() {
 fn game_version_types() {
     smol::block_on(async {
         let params = GamesParams::default();
-        let games = e::games(&CLIENT, &API_BASE, &params).await;
+        let games = CLIENT.games(&params).await;
 
         match &games {
             Ok(_games) => (), /* println!("{:#?}", games) */
@@ -99,7 +114,7 @@ fn game_version_types() {
 fn categories() {
     smol::block_on(async {
         let params = CategoriesParams::game(GAME_MINECRAFT);
-        let categories = e::categories(&CLIENT, &API_BASE, &params).await;
+        let categories = CLIENT.categories(&params).await;
 
         match &categories {
             Ok(_categories) => (), /* println!("{:#?}", categories) */
@@ -115,7 +130,7 @@ fn categories() {
 fn search_projects() {
     smol::block_on(async {
         let params = ProjectSearchParams::game(GAME_MINECRAFT);
-        let result = e::search_projects(&CLIENT, &API_BASE, &params).await;
+        let result = CLIENT.search_projects(&params).await;
 
         match &result {
             Ok(_response) => (), /* println!("{:#?}", response) */
@@ -141,7 +156,7 @@ fn project() {
         let project_ids = projects.iter().map(|project| project.id);
 
         for project in project_ids {
-            let result = e::project(&CLIENT, &API_BASE, project).await;
+            let result = CLIENT.project(project).await;
 
             match result {
                 Ok(_project) => (), /* println!("{:#?}", project) */
@@ -159,7 +174,7 @@ fn projects() {
     smol::block_on(async {
         let projects = &SAMPLE_PROJECTS[..3000];
         let project_ids = projects.iter().map(|project| project.id);
-        let result = e::projects(&CLIENT, &API_BASE, project_ids).await;
+        let result = CLIENT.projects(project_ids).await;
 
         match result {
             Ok(_projects) => (), /* println!("{:#?}", projects) */
@@ -174,7 +189,7 @@ fn projects() {
 fn featured_projects() {
     smol::block_on(async {
         let body = FeaturedProjectsBody::game(GAME_MINECRAFT);
-        let result = e::featured_projects(&CLIENT, &API_BASE, &body).await;
+        let result = CLIENT.featured_projects(&body).await;
 
         match result {
             Ok(_featured) => (), /* println!("{:#?}", featured) */
@@ -192,7 +207,7 @@ fn project_description() {
         let project_ids = projects.iter().map(|project| project.id);
 
         for project in project_ids {
-            let result = e::project_description(&CLIENT, &API_BASE, project).await;
+            let result = CLIENT.project_description(project).await;
             // let result = result.map(|description| description.data);
             match result {
                 Ok(_description) => (), /* println!("{}", **description) */
@@ -217,7 +232,7 @@ fn project_file() {
 
         for (project, files) in project_files.into_iter() {
             for file in files {
-                let result = e::project_file(&CLIENT, &API_BASE, project, file).await;
+                let result = CLIENT.project_file(project, file).await;
 
                 match result {
                     Ok(_file) => (), /* println!("{:#?}", file) */
@@ -237,7 +252,7 @@ fn project_file_by_id() {
             .flat_map(|project| project.latest_files.iter().map(|file| file.id));
 
         for file in files {
-            let result = e::project_file_by_id(&CLIENT, &API_BASE, file).await;
+            let result = CLIENT.project_file_by_id(file).await;
 
             match result {
                 Ok(_file) => (), /* println!("{:#?}", file) */
@@ -258,7 +273,7 @@ fn project_files() {
         let project_ids = projects.iter().map(|project| project.id);
 
         for project in project_ids {
-            let result = e::project_files(&CLIENT, &API_BASE, project, &params).await;
+            let result = CLIENT.project_files(project, &params).await;
 
             match result {
                 Ok(_projects) => (), /* println!("{:#?}", projects) */
@@ -282,7 +297,7 @@ fn project_files_iter() {
         let project_ids = projects.iter().map(|project| project.id);
 
         for project in project_ids {
-            let files = e::project_files_iter(&CLIENT, &API_BASE, project, params.clone());
+            let files = CLIENT.project_files_iter(project, params.clone());
             pin!(files);
 
             while let Some(result) = files.next().await {
@@ -303,8 +318,7 @@ fn project_files_by_ids() {
         let projects = &SAMPLE_PROJECTS[..3000];
         let file_ids = projects.iter().map(|project| project.main_file_id);
 
-        let result = e::project_files_by_ids(&CLIENT, &API_BASE, file_ids).await;
-        let result = result.map(|r| r.into_value().data);
+        let result = CLIENT.project_files_by_ids(file_ids).await;
 
         match result {
             Ok(_files) => {
@@ -331,8 +345,7 @@ fn project_file_changelog() {
             .collect::<HashMap<_, _>>();
 
         for (project, file) in project_files.into_iter() {
-            let result = e::project_file_changelog(&CLIENT, &API_BASE, project, file).await;
-            let result = result.map(|r| r.into_value().data);
+            let result = CLIENT.project_file_changelog(project, file).await;
 
             match result {
                 Ok(_changelog) => (), /* println!("{}", changelog) */
@@ -357,8 +370,7 @@ fn project_file_download_url() {
         });
 
         for (project, file) in projects_files {
-            let result = e::project_file_download_url(&CLIENT, &API_BASE, project, file).await;
-            let result = result.map(|r| r.into_value().data);
+            let result = CLIENT.project_file_download_url(project, file).await;
 
             match result {
                 Ok(_download) => (), /* println!("{}", download) */
