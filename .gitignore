@@ -6,5 +6,5 @@ Cargo.lock
 .idea/
 
 # Nix
-flake.lock
+/result
 
